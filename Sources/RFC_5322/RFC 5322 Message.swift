@@ -57,8 +57,8 @@ extension RFC_5322 {
         /// Unique message identifier
         public let messageId: String
 
-        /// Message body (typically MIME content from RFC 2045/2046)
-        public let body: String
+        /// Message body as Data (typically MIME content from RFC 2045/2046)
+        public let body: Data
 
         /// Additional custom headers
         public let additionalHeaders: [String: String]
@@ -77,7 +77,7 @@ extension RFC_5322 {
         ///   - subject: Subject line
         ///   - date: Message date
         ///   - messageId: Unique message identifier
-        ///   - body: Message body
+        ///   - body: Message body as Data
         ///   - additionalHeaders: Additional custom headers
         ///   - mimeVersion: MIME-Version header (defaults to "1.0")
         public init(
@@ -89,7 +89,7 @@ extension RFC_5322 {
             subject: String,
             date: Foundation.Date,
             messageId: String,
-            body: String,
+            body: Data,
             additionalHeaders: [String: String] = [:],
             mimeVersion: String = "1.0"
         ) {
@@ -113,6 +113,13 @@ extension RFC_5322 {
             let uuid = UUID().uuidString
             let domain = from.domain.name
             return "<\(uuid)@\(domain)>"
+        }
+
+        /// Convenience property to get body as String
+        ///
+        /// Returns nil if body data is not valid UTF-8
+        public var bodyString: String? {
+            String(data: body, encoding: .utf8)
         }
 
         /// Renders the complete RFC 5322 message
@@ -164,8 +171,10 @@ extension RFC_5322 {
             // Empty line separates headers from body
             lines.append("")
 
-            // Body
-            lines.append(body)
+            // Body (convert Data to String)
+            if let bodyStr = String(data: body, encoding: .utf8) {
+                lines.append(bodyStr)
+            }
 
             return lines.joined(separator: "\r\n")
         }

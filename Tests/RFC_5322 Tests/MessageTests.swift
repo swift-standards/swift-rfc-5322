@@ -23,7 +23,7 @@ struct MessageTests {
             subject: "Test Message",
             date: Date(),
             messageId: "<test@example.com>",
-            body: "Hello, World!"
+            body: Data("Hello, World!".utf8)
         )
 
         let rendered = message.render()
@@ -32,5 +32,22 @@ struct MessageTests {
         #expect(rendered.contains("To: recipient@example.com"))
         #expect(rendered.contains("Subject: Test Message"))
         #expect(rendered.contains("Hello, World!"))
+    }
+
+    @Test("Body string convenience property")
+    func bodyStringProperty() throws {
+        let from = try RFC_5322.EmailAddress("sender@example.com")
+        let to = [try RFC_5322.EmailAddress("recipient@example.com")]
+
+        let message = RFC_5322.Message(
+            from: from,
+            to: to,
+            subject: "Test",
+            date: Date(),
+            messageId: "<test@example.com>",
+            body: Data("Test Body".utf8)
+        )
+
+        #expect(message.bodyString == "Test Body")
     }
 }
