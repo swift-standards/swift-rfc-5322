@@ -18,8 +18,10 @@ extension RFC_5322.Date {
 
     /// Month abbreviations as specified by RFC 5322 section 3.3
     /// These are protocol-mandated values and must not be localized
-    public static let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    public static let months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ]
 
     /// Day abbreviations as specified by RFC 5322 section 3.3
     /// These are protocol-mandated values and must not be localized
@@ -100,31 +102,35 @@ extension RFC_5322.Date {
 
         // Validate month
         guard let monthStr = components.dropFirst(2).first,
-              Self.months.contains(monthStr) else {
+            Self.months.contains(monthStr)
+        else {
             return false
         }
 
         // Validate year
         guard let yearStr = components.dropFirst(3).first,
-              let year = Int(yearStr),
-              validYearRange.contains(year) else {
+            let year = Int(yearStr),
+            validYearRange.contains(year)
+        else {
             return false
         }
 
         // Validate time format
         let timeComponents = components[4].split(separator: ":")
         guard timeComponents.count >= 2,
-              timeComponents.count <= 3,
-              let hour = Int(timeComponents[0]),
-              let minute = Int(timeComponents[1]),
-              hour >= 0 && hour <= 23,
-              minute >= 0 && minute <= 59 else {
+            timeComponents.count <= 3,
+            let hour = Int(timeComponents[0]),
+            let minute = Int(timeComponents[1]),
+            hour >= 0 && hour <= 23,
+            minute >= 0 && minute <= 59
+        else {
             return false
         }
 
         if timeComponents.count == 3 {
             guard let second = Int(timeComponents[2]),
-                  second >= 0 && second <= 60 else { // Allow for leap second
+                second >= 0 && second <= 60
+            else {  // Allow for leap second
                 return false
             }
         }
@@ -132,9 +138,10 @@ extension RFC_5322.Date {
         // Validate timezone
         let zone = components.last ?? ""
         guard zone.count == 5,
-              zone.hasPrefix("+") || zone.hasPrefix("-"),
-              let offset = Int(zone.dropFirst()),
-              offset <= 9959 else {
+            zone.hasPrefix("+") || zone.hasPrefix("-"),
+            let offset = Int(zone.dropFirst()),
+            offset <= 9959
+        else {
             return false
         }
 

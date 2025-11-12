@@ -218,10 +218,14 @@ extension RFC_5322.Header.Name {
     public static let xAppleBaseUrl = RFC_5322.Header.Name("X-Apple-Base-Url")
 
     /// X-Universally-Unique-Identifier: header
-    public static let xUniversallyUniqueIdentifier = RFC_5322.Header.Name("X-Universally-Unique-Identifier")
+    public static let xUniversallyUniqueIdentifier = RFC_5322.Header.Name(
+        "X-Universally-Unique-Identifier"
+    )
 
     /// X-Apple-Mail-Remote-Attachments: header
-    public static let xAppleMailRemoteAttachments = RFC_5322.Header.Name("X-Apple-Mail-Remote-Attachments")
+    public static let xAppleMailRemoteAttachments = RFC_5322.Header.Name(
+        "X-Apple-Mail-Remote-Attachments"
+    )
 
     /// X-Apple-Windows-Friendly: header
     public static let xAppleWindowsFriendly = RFC_5322.Header.Name("X-Apple-Windows-Friendly")

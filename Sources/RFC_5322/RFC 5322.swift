@@ -6,10 +6,11 @@
 //
 
 import Foundation
-import RegexBuilder
 import RFC_1123
 import RFC_5321
+import RegexBuilder
 
+// swiftlint:disable:next type_name
 public enum RFC_5322 {}
 
 extension RFC_5322 {
@@ -151,9 +152,10 @@ extension RFC_5322.EmailAddress {
             }
         }
 
+        // swiftlint:disable:next nesting
         private enum Storage: Hashable {
             case dotAtom(String)  // Regular unquoted format
-            case quoted(String)   // Quoted string format
+            case quoted(String)  // Quoted string format
         }
     }
 }
@@ -169,7 +171,8 @@ extension RFC_5322.EmailAddress {
 
     // Dot-atom regex: series of atoms separated by dots
     // More restrictive than RFC 5321 - no "!" or "|" allowed
-    nonisolated(unsafe) private static let dotAtomRegex = /[a-zA-Z0-9#$%&'\*\+\-\/=\?\^_`\{\}~]+(?:\.[a-zA-Z0-9#$%&'\*\+\-\/=\?\^_`\{\}~]+)*/
+    nonisolated(unsafe) private static let dotAtomRegex =
+        /[a-zA-Z0-9#$%&'\*\+\-\/=\?\^_`\{\}~]+(?:\.[a-zA-Z0-9#$%&'\*\+\-\/=\?\^_`\{\}~]+)*/
 
     // Quoted string regex: allows any printable character except unescaped quotes
     nonisolated(unsafe) private static let quotedRegex = /(?:[^"\\\r\n]|\\["\\])+/
@@ -181,8 +184,7 @@ extension RFC_5322.EmailAddress {
         if let name = displayName {
             // Quote the display name if it contains special characters or non-ASCII
             let needsQuoting = name.contains(where: {
-                !$0.isLetter && !$0.isNumber && !$0.isWhitespace ||
-                $0.asciiValue == nil
+                !$0.isLetter && !$0.isNumber && !$0.isWhitespace || $0.asciiValue == nil
             })
             let quotedName = needsQuoting ? "\"\(name)\"" : name
             return "\(quotedName) <\(localPart.stringValue)@\(domain.name)>"  // Exactly one space before angle bracket

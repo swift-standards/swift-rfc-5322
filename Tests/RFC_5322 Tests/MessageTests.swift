@@ -7,6 +7,7 @@
 
 import Foundation
 import Testing
+
 @testable import RFC_5322
 
 @Suite("RFC 5322 Message Tests")
