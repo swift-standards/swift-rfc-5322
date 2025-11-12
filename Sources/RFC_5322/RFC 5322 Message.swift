@@ -61,7 +61,7 @@ extension RFC_5322 {
         public let body: Data
 
         /// Additional custom headers
-        public let additionalHeaders: [String: String]
+        public let additionalHeaders: [Header]
 
         /// MIME-Version header value (defaults to "1.0")
         public let mimeVersion: String
@@ -90,7 +90,7 @@ extension RFC_5322 {
             date: Foundation.Date,
             messageId: String,
             body: Data,
-            additionalHeaders: [String: String] = [:],
+            additionalHeaders: [Header] = [],
             mimeVersion: String = "1.0"
         ) {
             self.from = from
@@ -163,9 +163,9 @@ extension RFC_5322 {
             // MIME-Version (required for MIME messages)
             lines.append("MIME-Version: \(mimeVersion)")
 
-            // Additional custom headers (sorted for consistency)
-            for (key, value) in additionalHeaders.sorted(by: { $0.key < $1.key }) {
-                lines.append("\(key): \(value)")
+            // Additional custom headers (in order)
+            for header in additionalHeaders {
+                lines.append("\(header.name.rawValue): \(header.value)")
             }
 
             // Empty line separates headers from body
