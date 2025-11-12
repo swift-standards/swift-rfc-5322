@@ -10,7 +10,6 @@ import RFC_1123
 import RFC_5321
 import RegexBuilder
 
-// swiftlint:disable:next type_name
 public enum RFC_5322 {}
 
 extension RFC_5322 {
