@@ -143,15 +143,12 @@ extension RFC_5322.EmailAddress {
         }
 
         /// The string representation
-        public var stringValue: String {
+        public var description: String {
             switch storage {
             case .dotAtom(let string), .quoted(let string):
                 return string
             }
         }
-
-        /// Description for CustomStringConvertible
-        public var description: String { stringValue }
 
         // swiftlint:disable:next nesting
         private enum Storage: Hashable {
@@ -188,14 +185,14 @@ extension RFC_5322.EmailAddress {
                 !$0.isLetter && !$0.isNumber && !$0.isWhitespace || $0.asciiValue == nil
             })
             let quotedName = needsQuoting ? "\"\(name)\"" : name
-            return "\(quotedName) <\(localPart.stringValue)@\(domain.name)>"  // Exactly one space before angle bracket
+            return "\(quotedName) <\(localPart)@\(domain.name)>"  // Exactly one space before angle bracket
         }
-        return "\(localPart.stringValue)@\(domain.name)"
+        return "\(localPart)@\(domain.name)"
     }
 
     /// Just the email address part without display name
     public var addressValue: String {
-        "\(localPart.stringValue)@\(domain.name)"
+        "\(localPart)@\(domain.name)"
     }
 }
 
