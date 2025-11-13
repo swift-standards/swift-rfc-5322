@@ -7,7 +7,6 @@
 
 import Foundation
 import RFC_1123
-import RFC_5321
 import RegexBuilder
 
 public enum RFC_5322 {}
@@ -194,15 +193,6 @@ extension RFC_5322.EmailAddress {
     /// Just the email address part without display name
     public var addressValue: String {
         "\(localPart.stringValue)@\(domain.name)"
-    }
-
-    /// Convert to RFC 5321 format if possible
-    public func toRFC5321() throws -> RFC_5321.EmailAddress {
-        try RFC_5321.EmailAddress(
-            displayName: displayName,
-            localPart: .init(localPart.stringValue),
-            domain: domain
-        )
     }
 }
 
