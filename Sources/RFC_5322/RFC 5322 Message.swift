@@ -32,7 +32,7 @@ extension RFC_5322 {
     ///
     /// let emlContent = message.render()
     /// ```
-    public struct Message: Hashable, Sendable {
+    public struct Message: Hashable, Sendable, Codable {
         /// Originator - From field
         public let from: EmailAddress
 
