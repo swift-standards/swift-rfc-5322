@@ -116,7 +116,7 @@ let message = RFC_5322.Message(
     messageId: "<unique-id@example.com>",
     body: "Meeting summary...".data(using: .utf8)!,
     additionalHeaders: [
-        RFC_5322.Header(name: RFC_5322.Header.Name("X-Priority"), value: "1"),
+        RFC_5322.Header(name: "X-Priority", value: "1"),
         RFC_5322.Header(name: .contentType, value: "text/plain; charset=utf-8")
     ]
 )

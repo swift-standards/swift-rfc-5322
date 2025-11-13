@@ -15,7 +15,7 @@ struct ReadmeVerificationTests {
     @Test("README Line 54-57: Parse email address")
     func parseEmailAddress() throws {
         let email = try RFC_5322.EmailAddress("user@example.com")
-        #expect(email.localPart.stringValue == "user")
+        #expect(email.localPart.description == "user")
         #expect(email.domain.name == "example.com")
     }
 
@@ -34,7 +34,7 @@ struct ReadmeVerificationTests {
             domain: .init("example.com")
         )
         #expect(addr.displayName == "Jane Smith")
-        #expect(addr.localPart.stringValue == "jane")
+        #expect(addr.localPart.description == "jane")
         #expect(addr.domain.name == "example.com")
     }
 

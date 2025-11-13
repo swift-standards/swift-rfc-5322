@@ -168,9 +168,10 @@ extension RFC_5322.EmailAddress {
     nonisolated(unsafe) private static let addressRegex = /(?:((?:\".*?\"|[^<]+)\s+))?<(.*?)@(.*?)>/
 
     // Dot-atom regex: series of atoms separated by dots
-    // More restrictive than RFC 5321 - no "!" or "|" allowed
+    // RFC 5322 Section 3.2.3 defines atext (RFC 5321 references this same definition)
+    // atext = ALPHA / DIGIT / "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "/" / "=" / "?" / "^" / "_" / "`" / "{" / "|" / "}" / "~"
     nonisolated(unsafe) private static let dotAtomRegex =
-        /[a-zA-Z0-9#$%&'\*\+\-\/=\?\^_`\{\}~]+(?:\.[a-zA-Z0-9#$%&'\*\+\-\/=\?\^_`\{\}~]+)*/
+        /[a-zA-Z0-9!#$%&'\*\+\-\/=\?\^_`\{\|}~]+(?:\.[a-zA-Z0-9!#$%&'\*\+\-\/=\?\^_`\{\|}~]+)*/
 
     // Quoted string regex: allows any printable character except unescaped quotes
     nonisolated(unsafe) private static let quotedRegex = /(?:[^"\\\r\n]|\\["\\])+/

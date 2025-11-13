@@ -58,8 +58,8 @@ extension RFC_5322.Header {
     /// ## Example
     ///
     /// ```swift
-    /// let from = RFC_5322.Header.Name.from
-    /// let custom = RFC_5322.Header.Name("X-Custom-Header")
+    /// let from: Self = fro
+    /// let custom: Self = "X-Custom-Header"
     ///
     /// var headers: [RFC_5322.Header] = []
     /// headers.append(.init(name: .messageId, value: "<abc@example.com>"))
@@ -116,125 +116,121 @@ extension RFC_5322.Header {
 
 extension RFC_5322.Header.Name {
     /// From: header (originator)
-    public static let from = RFC_5322.Header.Name("From")
+    public static let from: Self = "From"
 
     /// To: header (primary recipients)
-    public static let to = RFC_5322.Header.Name("To")
+    public static let to: Self = "To"
 
     /// Cc: header (carbon copy recipients)
-    public static let cc = RFC_5322.Header.Name("Cc")
+    public static let cc: Self = "Cc"
 
     /// Bcc: header (blind carbon copy recipients)
-    public static let bcc = RFC_5322.Header.Name("Bcc")
+    public static let bcc: Self = "Bcc"
 
     /// Subject: header
-    public static let subject = RFC_5322.Header.Name("Subject")
+    public static let subject: Self = "Subject"
 
     /// Date: header
-    public static let date = RFC_5322.Header.Name("Date")
+    public static let date: Self = "Date"
 
     /// Message-ID: header (unique message identifier)
-    public static let messageId = RFC_5322.Header.Name("Message-ID")
+    public static let messageId: Self = "Message-ID"
 
     /// Reply-To: header
-    public static let replyTo = RFC_5322.Header.Name("Reply-To")
+    public static let replyTo: Self = "Reply-To"
 
     /// Sender: header (actual sender if different from From)
-    public static let sender = RFC_5322.Header.Name("Sender")
+    public static let sender: Self = "Sender"
 
     /// In-Reply-To: header (message being replied to)
-    public static let inReplyTo = RFC_5322.Header.Name("In-Reply-To")
+    public static let inReplyTo: Self = "In-Reply-To"
 
     /// References: header (related messages)
-    public static let references = RFC_5322.Header.Name("References")
+    public static let references: Self = "References"
 
     /// Resent-From: header
-    public static let resentFrom = RFC_5322.Header.Name("Resent-From")
+    public static let resentFrom: Self = "Resent-From"
 
     /// Resent-To: header
-    public static let resentTo = RFC_5322.Header.Name("Resent-To")
+    public static let resentTo: Self = "Resent-To"
 
     /// Resent-Date: header
-    public static let resentDate = RFC_5322.Header.Name("Resent-Date")
+    public static let resentDate: Self = "Resent-Date"
 
     /// Resent-Message-ID: header
-    public static let resentMessageId = RFC_5322.Header.Name("Resent-Message-ID")
+    public static let resentMessageId: Self = "Resent-Message-ID"
 
     /// Return-Path: header
-    public static let returnPath = RFC_5322.Header.Name("Return-Path")
+    public static let returnPath: Self = "Return-Path"
 
     /// Received: header (mail transfer path)
-    public static let received = RFC_5322.Header.Name("Received")
+    public static let received: Self = "Received"
 }
 
 // MARK: - MIME Headers (RFC 2045)
 
 extension RFC_5322.Header.Name {
     /// Content-Type: header (media type)
-    public static let contentType = RFC_5322.Header.Name("Content-Type")
+    public static let contentType: Self = "Content-Type"
 
     /// Content-Transfer-Encoding: header
-    public static let contentTransferEncoding = RFC_5322.Header.Name("Content-Transfer-Encoding")
+    public static let contentTransferEncoding: Self = "Content-Transfer-Encoding"
 
     /// MIME-Version: header
-    public static let mimeVersion = RFC_5322.Header.Name("MIME-Version")
+    public static let mimeVersion: Self = "MIME-Version"
 
     /// Content-Disposition: header
-    public static let contentDisposition = RFC_5322.Header.Name("Content-Disposition")
+    public static let contentDisposition: Self = "Content-Disposition"
 
     /// Content-ID: header
-    public static let contentId = RFC_5322.Header.Name("Content-ID")
+    public static let contentId: Self = "Content-ID"
 
     /// Content-Description: header
-    public static let contentDescription = RFC_5322.Header.Name("Content-Description")
+    public static let contentDescription: Self = "Content-Description"
 }
 
 // MARK: - Common Extension Headers
 
 extension RFC_5322.Header.Name {
     /// X-Mailer: header (mail client identification)
-    public static let xMailer = RFC_5322.Header.Name("X-Mailer")
+    public static let xMailer: Self = "X-Mailer"
 
     /// X-Priority: header (message priority)
-    public static let xPriority = RFC_5322.Header.Name("X-Priority")
+    public static let xPriority: Self = "X-Priority"
 
     /// List-Unsubscribe: header (mailing list unsubscribe)
-    public static let listUnsubscribe = RFC_5322.Header.Name("List-Unsubscribe")
+    public static let listUnsubscribe: Self = "List-Unsubscribe"
 
     /// List-ID: header (mailing list identifier)
-    public static let listId = RFC_5322.Header.Name("List-ID")
+    public static let listId: Self = "List-ID"
 
     /// Precedence: header
-    public static let precedence = RFC_5322.Header.Name("Precedence")
+    public static let precedence: Self = "Precedence"
 
     /// Auto-Submitted: header
-    public static let autoSubmitted = RFC_5322.Header.Name("Auto-Submitted")
+    public static let autoSubmitted: Self = "Auto-Submitted"
 }
 
 // MARK: - Apple Mail Headers
 
 extension RFC_5322.Header.Name {
     /// X-Apple-Base-Url: header
-    public static let xAppleBaseUrl = RFC_5322.Header.Name("X-Apple-Base-Url")
+    public static let xAppleBaseUrl: Self = "X-Apple-Base-Url"
 
     /// X-Universally-Unique-Identifier: header
-    public static let xUniversallyUniqueIdentifier = RFC_5322.Header.Name(
-        "X-Universally-Unique-Identifier"
-    )
+    public static let xUniversallyUniqueIdentifier: Self = "X-Universally-Unique-Identifier"
 
     /// X-Apple-Mail-Remote-Attachments: header
-    public static let xAppleMailRemoteAttachments = RFC_5322.Header.Name(
-        "X-Apple-Mail-Remote-Attachments"
-    )
+    public static let xAppleMailRemoteAttachments: Self = "X-Apple-Mail-Remote-Attachments"
 
     /// X-Apple-Windows-Friendly: header
-    public static let xAppleWindowsFriendly = RFC_5322.Header.Name("X-Apple-Windows-Friendly")
+    public static let xAppleWindowsFriendly: Self = "X-Apple-Windows-Friendly"
 
     /// X-Apple-Mail-Signature: header
-    public static let xAppleMailSignature = RFC_5322.Header.Name("X-Apple-Mail-Signature")
+    public static let xAppleMailSignature: Self = "X-Apple-Mail-Signature"
 
     /// X-Uniform-Type-Identifier: header
-    public static let xUniformTypeIdentifier = RFC_5322.Header.Name("X-Uniform-Type-Identifier")
+    public static let xUniformTypeIdentifier: Self = "X-Uniform-Type-Identifier"
 }
 
 // MARK: - Name Protocol Conformances
