@@ -88,8 +88,8 @@ let message = RFC_5322.Message(
     body: "Hello, World!".data(using: .utf8)!
 )
 
-// Render to RFC 5322 format
-let emlContent = message.render()
+// Convert to RFC 5322 format
+let emlContent = String(message)
 print(emlContent)
 // From: John Doe <john@example.com>
 // To: jane@example.com
@@ -177,9 +177,16 @@ public struct Message: Hashable, Sendable {
     public let additionalHeaders: [Header]
     public let mimeVersion: String
 
-    public func render() -> String
     public var bodyString: String?
-    public static func generateMessageId(from: EmailAddress) -> String
+    public static func generateMessageId(from: EmailAddress, uniqueId: String) -> String
+}
+
+extension [UInt8] {
+    public init(_ message: RFC_5322.Message)
+}
+
+extension String {
+    public init(_ message: RFC_5322.Message)
 }
 ```
 

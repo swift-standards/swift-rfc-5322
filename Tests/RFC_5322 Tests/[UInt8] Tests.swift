@@ -93,8 +93,8 @@ struct UInt8_Array_Tests {
     // MARK: - DateTime to [UInt8]
 
     @Test("Convert datetime to bytes")
-    func datetimeToBytes() {
-        let dateTime = RFC_5322.DateTime(
+    func datetimeToBytes() throws {
+        let dateTime = try RFC_5322.DateTime(
             year: 2024,
             month: 1,
             day: 15,

@@ -7,6 +7,7 @@
 
 import RFC_1123
 import Standards
+import INCITS_4_1986
 
 extension RFC_5322 {
     /// RFC 5322 Internet Message Format
@@ -105,21 +106,15 @@ extension RFC_5322 {
             self.additionalHeaders = additionalHeaders
             self.mimeVersion = mimeVersion
         }
+    }
+}
 
-        /// Generates a unique Message-ID
-        ///
-        /// Format: `<timestamp.randomBytes@domain>` where domain is extracted from the from address
-        /// Note: For production use, provide a platform-specific UUID or random ID generator
-        public static func generateMessageId(from: EmailAddress, uniqueId: String) -> String {
-            let domain = from.domain.name
-            return "<\(uniqueId)@\(domain)>"
-        }
-
-        /// Convenience property to get body as String
-        ///
-        /// Returns nil if body bytes are not valid UTF-8
-        public var bodyString: String? {
-            String(decoding: body, as: UTF8.self)
-        }
+extension RFC_5322.Message {
+    /// Generates a unique Message-ID
+    ///
+    /// Format: `<timestamp.randomBytes@domain>` where domain is extracted from the from address
+    /// Note: For production use, provide a platform-specific UUID or random ID generator
+    public static func generateMessageId(from: RFC_5322.EmailAddress, uniqueId: String) -> String {
+        "<\(uniqueId)@\(from.domain.name)>"
     }
 }
