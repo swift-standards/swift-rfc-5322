@@ -5,7 +5,6 @@
 //  Verifies that README code examples actually work
 //
 
-import Foundation
 import RFC_5322
 import Testing
 
@@ -47,18 +46,19 @@ struct ReadmeVerificationTests {
                 domain: .init("example.com")
             ),
             to: [try RFC_5322.EmailAddress("jane@example.com")],
+            date: RFC_5322.DateTime(secondsSinceEpoch: 1609459200),
             subject: "Hello from Swift!",
-            date: Date(),
             messageId: RFC_5322.Message.generateMessageId(
-                from: try RFC_5322.EmailAddress("john@example.com")
+                from: try RFC_5322.EmailAddress("john@example.com"),
+                uniqueId: "test-unique-id"
             ),
-            body: Data("Hello, World!".utf8)
+            body: Array("Hello, World!".utf8)
         )
 
         #expect(message.from.displayName == "John Doe")
         #expect(message.to.count == 1)
         #expect(message.subject == "Hello from Swift!")
-        #expect(message.bodyString == "Hello, World!")
+        #expect(String(message.body) == "Hello, World!")
     }
 
     @Test("README Line 91-92: Render message")
@@ -70,13 +70,13 @@ struct ReadmeVerificationTests {
                 domain: .init("example.com")
             ),
             to: [try RFC_5322.EmailAddress("jane@example.com")],
+            date: RFC_5322.DateTime(secondsSinceEpoch: 1609459200),
             subject: "Hello from Swift!",
-            date: Date(),
             messageId: "<test@example.com>",
-            body: Data("Hello, World!".utf8)
+            body: Array("Hello, World!".utf8)
         )
 
-        let emlContent = message.render()
+        let emlContent = String(message)
         #expect(emlContent.contains("From: John Doe <john@example.com>"))
         #expect(emlContent.contains("To: jane@example.com"))
         #expect(emlContent.contains("Subject: Hello from Swift!"))
@@ -92,10 +92,10 @@ struct ReadmeVerificationTests {
             cc: [try RFC_5322.EmailAddress("cc@example.com")],
             bcc: [try RFC_5322.EmailAddress("bcc@example.com")],
             replyTo: try RFC_5322.EmailAddress("replyto@example.com"),
+            date: RFC_5322.DateTime(secondsSinceEpoch: 1609459200),
             subject: "Meeting Notes",
-            date: Date(),
             messageId: "<unique-id@example.com>",
-            body: Data("Meeting summary...".utf8),
+            body: Array("Meeting summary...".utf8),
             additionalHeaders: [
                 RFC_5322.Header(name: RFC_5322.Header.Name("X-Priority"), value: "1"),
                 RFC_5322.Header(name: .contentType, value: "text/plain; charset=utf-8"),
@@ -110,7 +110,8 @@ struct ReadmeVerificationTests {
 
     @Test("README Line 128-129: Format date")
     func formatDate() throws {
-        let dateString = RFC_5322.Date.string(from: Date())
+        let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+        let dateString = dateTime.format(dateTime)
         #expect(!dateString.isEmpty)
         // Should contain day, month, year, time
         #expect(dateString.contains(","))

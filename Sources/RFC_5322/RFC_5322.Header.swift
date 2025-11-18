@@ -1,4 +1,3 @@
-import Foundation
 
 extension RFC_5322 {
     /// Email header field (name-value pair)

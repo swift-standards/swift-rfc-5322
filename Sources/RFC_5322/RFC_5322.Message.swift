@@ -5,8 +5,8 @@
 //  Created by Coen ten Thije Boonkkamp on 12/11/2025.
 //
 
-import Foundation
 import RFC_1123
+import Standards
 
 extension RFC_5322 {
     /// RFC 5322 Internet Message Format
@@ -52,13 +52,13 @@ extension RFC_5322 {
         public let subject: String
 
         /// Message date
-        public let date: Foundation.Date
+        public let date: RFC_5322.DateTime
 
         /// Unique message identifier
         public let messageId: String
 
-        /// Message body as Data (typically MIME content from RFC 2045/2046)
-        public let body: Data
+        /// Message body as bytes (typically MIME content from RFC 2045/2046)
+        public let body: [UInt8]
 
         /// Additional custom headers
         public let additionalHeaders: [Header]
@@ -77,7 +77,7 @@ extension RFC_5322 {
         ///   - subject: Subject line
         ///   - date: Message date
         ///   - messageId: Unique message identifier
-        ///   - body: Message body as Data
+        ///   - body: Message body as bytes
         ///   - additionalHeaders: Additional custom headers
         ///   - mimeVersion: MIME-Version header (defaults to "1.0")
         public init(
@@ -86,10 +86,10 @@ extension RFC_5322 {
             cc: [EmailAddress]? = nil,
             bcc: [EmailAddress]? = nil,
             replyTo: EmailAddress? = nil,
+            date: RFC_5322.DateTime,
             subject: String,
-            date: Foundation.Date,
             messageId: String,
-            body: Data,
+            body: [UInt8],
             additionalHeaders: [Header] = [],
             mimeVersion: String = "1.0"
         ) {
@@ -98,8 +98,8 @@ extension RFC_5322 {
             self.cc = cc
             self.bcc = bcc
             self.replyTo = replyTo
-            self.subject = subject
             self.date = date
+            self.subject = subject
             self.messageId = messageId
             self.body = body
             self.additionalHeaders = additionalHeaders
@@ -108,75 +108,18 @@ extension RFC_5322 {
 
         /// Generates a unique Message-ID
         ///
-        /// Format: `<UUID@domain>` where domain is extracted from the from address
-        public static func generateMessageId(from: EmailAddress) -> String {
-            let uuid = UUID().uuidString
+        /// Format: `<timestamp.randomBytes@domain>` where domain is extracted from the from address
+        /// Note: For production use, provide a platform-specific UUID or random ID generator
+        public static func generateMessageId(from: EmailAddress, uniqueId: String) -> String {
             let domain = from.domain.name
-            return "<\(uuid)@\(domain)>"
+            return "<\(uniqueId)@\(domain)>"
         }
 
         /// Convenience property to get body as String
         ///
-        /// Returns nil if body data is not valid UTF-8
+        /// Returns nil if body bytes are not valid UTF-8
         public var bodyString: String? {
-            String(data: body, encoding: .utf8)
-        }
-
-        /// Renders the complete RFC 5322 message
-        ///
-        /// Generates headers and body in RFC 5322 format suitable for .eml files.
-        /// BCC recipients are excluded from the rendered output per RFC 5322.
-        ///
-        /// - Returns: Complete RFC 5322 formatted message
-        public func render() -> String {
-            var lines: [String] = []
-
-            // Required headers in recommended order (RFC 5322 Section 3.6)
-
-            // From (required)
-            lines.append("From: \(from.stringValue)")
-
-            // To (required)
-            let toAddresses = to.map(\.stringValue).joined(separator: ", ")
-            lines.append("To: \(toAddresses)")
-
-            // Cc (optional)
-            if let cc = cc, !cc.isEmpty {
-                let ccAddresses = cc.map(\.stringValue).joined(separator: ", ")
-                lines.append("Cc: \(ccAddresses)")
-            }
-
-            // Subject (required in practice)
-            lines.append("Subject: \(subject)")
-
-            // Date (required)
-            lines.append("Date: \(RFC_5322.Date.string(from: date))")
-
-            // Message-ID (recommended)
-            lines.append("Message-ID: \(messageId)")
-
-            // Reply-To (optional)
-            if let replyTo = replyTo {
-                lines.append("Reply-To: \(replyTo.stringValue)")
-            }
-
-            // MIME-Version (required for MIME messages)
-            lines.append("MIME-Version: \(mimeVersion)")
-
-            // Additional custom headers (in order)
-            for header in additionalHeaders {
-                lines.append("\(header.name.rawValue): \(header.value)")
-            }
-
-            // Empty line separates headers from body
-            lines.append("")
-
-            // Body (convert Data to String)
-            if let bodyStr = String(data: body, encoding: .utf8) {
-                lines.append(bodyStr)
-            }
-
-            return lines.joined(separator: "\r\n")
+            String(decoding: body, as: UTF8.self)
         }
     }
 }
