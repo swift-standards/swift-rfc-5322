@@ -94,7 +94,7 @@ struct RFC5322DateTimeFoundationFormattingTests {
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
     @Test("Format RFC 5322 DateTime with date and time styles")
     func formatWithDateTimeStyles() throws {
-        let dt = RFC_5322.DateTime(year: 2024, month: 1, day: 15, hour: 14, minute: 30)
+        let dt = try RFC_5322.DateTime(year: 2024, month: 1, day: 15, hour: 14, minute: 30)
 
         // Numeric date, standard time
         let formatted = dt.formatted(date: .numeric, time: .standard)
@@ -107,7 +107,7 @@ struct RFC5322DateTimeFoundationFormattingTests {
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
     @Test("Format RFC 5322 DateTime with long date style")
     func formatLongDate() throws {
-        let dt = RFC_5322.DateTime(year: 2024, month: 6, day: 15)
+        let dt = try RFC_5322.DateTime(year: 2024, month: 6, day: 15)
 
         let formatted = dt.formatted(date: .long, time: .omitted)
 
@@ -119,7 +119,7 @@ struct RFC5322DateTimeFoundationFormattingTests {
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
     @Test("Format RFC 5322 DateTime with custom FormatStyle")
     func formatWithCustomStyle() throws {
-        let dt = RFC_5322.DateTime(year: 2024, month: 3, day: 21, hour: 15, minute: 45)
+        let dt = try RFC_5322.DateTime(year: 2024, month: 3, day: 21, hour: 15, minute: 45)
 
         let formatted = dt.formatted(
             Date.FormatStyle()

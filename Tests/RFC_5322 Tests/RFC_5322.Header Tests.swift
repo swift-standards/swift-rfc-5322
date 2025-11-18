@@ -8,21 +8,21 @@
 import Testing
 @testable import RFC_5322
 
-@Suite("RFC_5322.Header")
-struct RFC_5322_Header_Tests {
+@Suite
+struct `RFC_5322.Header Tests` {
 
     // MARK: - Header Creation
 
-    @Test("Create header with standard name")
-    func createHeaderWithStandardName() {
+    @Test
+    func `Create header with standard name`() {
         let header = RFC_5322.Header(name: .contentType, value: "text/plain")
 
         #expect(header.name == .contentType)
         #expect(header.value == "text/plain")
     }
 
-    @Test("Create header with custom name")
-    func createHeaderWithCustomName() {
+    @Test
+    func `Create header with custom name`() {
         let header = RFC_5322.Header(name: "X-Custom-Header", value: "custom value")
 
         #expect(header.name.rawValue == "X-Custom-Header")
@@ -31,8 +31,8 @@ struct RFC_5322_Header_Tests {
 
     // MARK: - Header Name Tests
 
-    @Test("Header names are case-insensitive for equality")
-    func headerNamesCaseInsensitive() {
+    @Test
+    func `Header names are case-insensitive for equality`() {
         let name1 = RFC_5322.Header.Name("Content-Type")
         let name2 = RFC_5322.Header.Name("content-type")
         let name3 = RFC_5322.Header.Name("CONTENT-TYPE")
@@ -42,16 +42,16 @@ struct RFC_5322_Header_Tests {
         #expect(name1 == name3)
     }
 
-    @Test("Header names preserve original case")
-    func headerNamesPreserveCase() {
+    @Test
+    func `Header names preserve original case`() {
         let name = RFC_5322.Header.Name("X-Custom-Header")
 
         #expect(name.rawValue == "X-Custom-Header")
         #expect(name.description == "X-Custom-Header")
     }
 
-    @Test("Standard header names are defined")
-    func standardHeaderNamesExist() {
+    @Test
+    func `Standard header names are defined`() {
         #expect(RFC_5322.Header.Name.from.rawValue == "From")
         #expect(RFC_5322.Header.Name.to.rawValue == "To")
         #expect(RFC_5322.Header.Name.subject.rawValue == "Subject")
@@ -60,8 +60,8 @@ struct RFC_5322_Header_Tests {
         #expect(RFC_5322.Header.Name.contentType.rawValue == "Content-Type")
     }
 
-    @Test("Header name from string literal")
-    func headerNameFromStringLiteral() {
+    @Test
+    func `Header name from string literal`() {
         let name: RFC_5322.Header.Name = "X-Test"
 
         #expect(name.rawValue == "X-Test")
@@ -69,16 +69,16 @@ struct RFC_5322_Header_Tests {
 
     // MARK: - Header Description
 
-    @Test("Header description format")
-    func headerDescriptionFormat() {
+    @Test
+    func `Header description format`() {
         let header = RFC_5322.Header(name: "X-Test", value: "test value")
         let description = header.description
 
         #expect(description == "X-Test: test value")
     }
 
-    @Test("Header with colon in value")
-    func headerWithColonInValue() {
+    @Test
+    func `Header with colon in value`() {
         let header = RFC_5322.Header(
             name: .contentType,
             value: "text/plain; charset=utf-8"
@@ -89,23 +89,23 @@ struct RFC_5322_Header_Tests {
 
     // MARK: - Array Extensions - Subscript
 
-    @Test("Array subscript get header value")
-    func arraySubscriptGet() {
+    @Test
+    func `Array subscript get header value`() {
         var headers = [RFC_5322.Header]()
         headers.append(RFC_5322.Header(name: .contentType, value: "text/plain"))
 
         #expect(headers[.contentType] == "text/plain")
     }
 
-    @Test("Array subscript returns nil for missing header")
-    func arraySubscriptMissing() {
+    @Test
+    func `Array subscript returns nil for missing header`() {
         let headers = [RFC_5322.Header]()
 
         #expect(headers[.contentType] == nil)
     }
 
-    @Test("Array subscript set header value")
-    func arraySubscriptSet() {
+    @Test
+    func `Array subscript set header value`() {
         var headers = [RFC_5322.Header]()
         headers[.contentType] = "text/html"
 
@@ -114,8 +114,8 @@ struct RFC_5322_Header_Tests {
         #expect(headers[0].value == "text/html")
     }
 
-    @Test("Array subscript set replaces existing header")
-    func arraySubscriptSetReplaces() {
+    @Test
+    func `Array subscript set replaces existing header`() {
         var headers = [RFC_5322.Header]()
         headers.append(RFC_5322.Header(name: .contentType, value: "text/plain"))
         headers[.contentType] = "text/html"
@@ -124,8 +124,8 @@ struct RFC_5322_Header_Tests {
         #expect(headers[0].value == "text/html")
     }
 
-    @Test("Array subscript set nil removes header")
-    func arraySubscriptSetNilRemoves() {
+    @Test
+    func `Array subscript set nil removes header`() {
         var headers = [RFC_5322.Header]()
         headers.append(RFC_5322.Header(name: .contentType, value: "text/plain"))
         headers[.contentType] = nil
@@ -133,8 +133,8 @@ struct RFC_5322_Header_Tests {
         #expect(headers.count == 0)
     }
 
-    @Test("Array subscript removes all headers with same name")
-    func arraySubscriptRemovesAll() {
+    @Test
+    func `Array subscript removes all headers with same name`() {
         var headers = [RFC_5322.Header]()
         headers.append(RFC_5322.Header(name: .received, value: "server1"))
         headers.append(RFC_5322.Header(name: .received, value: "server2"))
@@ -147,8 +147,8 @@ struct RFC_5322_Header_Tests {
 
     // MARK: - Array Extensions - all()
 
-    @Test("Array all() returns multiple headers with same name")
-    func arrayAllMultipleHeaders() {
+    @Test
+    func `Array all() returns multiple headers with same name`() {
         var headers = [RFC_5322.Header]()
         headers.append(RFC_5322.Header(name: .received, value: "server1"))
         headers.append(RFC_5322.Header(name: .received, value: "server2"))
@@ -161,8 +161,8 @@ struct RFC_5322_Header_Tests {
         #expect(received[1].value == "server2")
     }
 
-    @Test("Array all() returns empty for missing header")
-    func arrayAllEmpty() {
+    @Test
+    func `Array all() returns empty for missing header`() {
         let headers = [RFC_5322.Header]()
         let received = headers.all(.received)
 
@@ -171,8 +171,8 @@ struct RFC_5322_Header_Tests {
 
     // MARK: - Array Extensions - values(for:)
 
-    @Test("Array values(for:) returns header values")
-    func arrayValuesFor() {
+    @Test
+    func `Array values(for:) returns header values`() {
         var headers = [RFC_5322.Header]()
         headers.append(RFC_5322.Header(name: .received, value: "server1"))
         headers.append(RFC_5322.Header(name: .received, value: "server2"))
@@ -186,8 +186,8 @@ struct RFC_5322_Header_Tests {
 
     // MARK: - Dictionary Literal
 
-    @Test("Create headers from dictionary literal")
-    func createFromDictionaryLiteral() {
+    @Test
+    func `Create headers from dictionary literal`() {
         let headers: [RFC_5322.Header] = [
             .from: "sender@example.com",
             .to: "recipient@example.com",
@@ -202,24 +202,24 @@ struct RFC_5322_Header_Tests {
 
     // MARK: - Hashable
 
-    @Test("Headers with same name and value are equal")
-    func headersEqual() {
+    @Test
+    func `Headers with same name and value are equal`() {
         let header1 = RFC_5322.Header(name: .contentType, value: "text/plain")
         let header2 = RFC_5322.Header(name: .contentType, value: "text/plain")
 
         #expect(header1 == header2)
     }
 
-    @Test("Headers with different values are not equal")
-    func headersDifferentValues() {
+    @Test
+    func `Headers with different values are not equal`() {
         let header1 = RFC_5322.Header(name: .contentType, value: "text/plain")
         let header2 = RFC_5322.Header(name: .contentType, value: "text/html")
 
         #expect(header1 != header2)
     }
 
-    @Test("Headers with case-insensitive names are equal")
-    func headersCaseInsensitiveNames() {
+    @Test
+    func `Headers with case-insensitive names are equal`() {
         let header1 = RFC_5322.Header(name: "X-Test", value: "value")
         let header2 = RFC_5322.Header(name: "x-test", value: "value")
 
@@ -229,8 +229,8 @@ struct RFC_5322_Header_Tests {
 
     // MARK: - Common Headers
 
-    @Test("RFC 5322 standard headers exist")
-    func rfc5322StandardHeaders() {
+    @Test
+    func `RFC 5322 standard headers exist`() {
         #expect(RFC_5322.Header.Name.from.rawValue == "From")
         #expect(RFC_5322.Header.Name.to.rawValue == "To")
         #expect(RFC_5322.Header.Name.cc.rawValue == "Cc")
@@ -241,16 +241,16 @@ struct RFC_5322_Header_Tests {
         #expect(RFC_5322.Header.Name.references.rawValue == "References")
     }
 
-    @Test("MIME headers exist")
-    func mimeHeadersExist() {
+    @Test
+    func `MIME headers exist`() {
         #expect(RFC_5322.Header.Name.contentType.rawValue == "Content-Type")
         #expect(RFC_5322.Header.Name.contentTransferEncoding.rawValue == "Content-Transfer-Encoding")
         #expect(RFC_5322.Header.Name.mimeVersion.rawValue == "MIME-Version")
         #expect(RFC_5322.Header.Name.contentDisposition.rawValue == "Content-Disposition")
     }
 
-    @Test("Extension headers exist")
-    func extensionHeadersExist() {
+    @Test
+    func `Extension headers exist`() {
         #expect(RFC_5322.Header.Name.xMailer.rawValue == "X-Mailer")
         #expect(RFC_5322.Header.Name.xPriority.rawValue == "X-Priority")
         #expect(RFC_5322.Header.Name.listUnsubscribe.rawValue == "List-Unsubscribe")

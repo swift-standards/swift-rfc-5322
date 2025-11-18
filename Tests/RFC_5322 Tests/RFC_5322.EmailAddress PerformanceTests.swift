@@ -11,7 +11,7 @@ import StandardsTestSupport
 
 extension PerformanceTests {
     @Suite(.serialized)
-    struct EmailAddressPerformance {
+    struct `RFC_5322.EmailAddress` {
 
         // MARK: - Parsing Performance
 

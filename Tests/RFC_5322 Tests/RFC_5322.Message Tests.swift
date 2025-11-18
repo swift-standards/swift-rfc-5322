@@ -8,13 +8,13 @@
 import Testing
 @testable import RFC_5322
 
-@Suite("RFC_5322.Message")
-struct RFC_5322_Message_Tests {
+@Suite
+struct `RFC_5322.Message Tests` {
 
     // MARK: - Basic Message Creation
 
-    @Test("Create basic message with required fields")
-    func createBasicMessage() throws {
+    @Test
+    func `Create basic message with required fields`() throws {
         let from = try RFC_5322.EmailAddress("sender@example.com")
         let to = [try RFC_5322.EmailAddress("recipient@example.com")]
 
@@ -35,8 +35,8 @@ struct RFC_5322_Message_Tests {
         #expect(String(decoding: message.body, as: UTF8.self) == "Hello, World!")
     }
 
-    @Test("Create message with multiple recipients")
-    func createMessageWithMultipleRecipients() throws {
+    @Test
+    func `Create message with multiple recipients`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [
@@ -56,8 +56,8 @@ struct RFC_5322_Message_Tests {
         #expect(message.to[2].addressValue == "charlie@example.com")
     }
 
-    @Test("Create message with CC recipients")
-    func createMessageWithCC() throws {
+    @Test
+    func `Create message with CC recipients`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("primary@example.com")],
@@ -72,8 +72,8 @@ struct RFC_5322_Message_Tests {
         #expect(message.cc?[0].addressValue == "cc@example.com")
     }
 
-    @Test("Create message with BCC recipients")
-    func createMessageWithBCC() throws {
+    @Test
+    func `Create message with BCC recipients`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("primary@example.com")],
@@ -88,8 +88,8 @@ struct RFC_5322_Message_Tests {
         #expect(message.bcc?[0].addressValue == "bcc@example.com")
     }
 
-    @Test("Create message with Reply-To")
-    func createMessageWithReplyTo() throws {
+    @Test
+    func `Create message with Reply-To`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -105,8 +105,8 @@ struct RFC_5322_Message_Tests {
 
     // MARK: - Additional Headers
 
-    @Test("Create message with additional headers")
-    func createMessageWithAdditionalHeaders() throws {
+    @Test
+    func `Create message with additional headers`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -128,8 +128,8 @@ struct RFC_5322_Message_Tests {
 
     // MARK: - MIME Version
 
-    @Test("Create message with custom MIME version")
-    func createMessageWithCustomMimeVersion() throws {
+    @Test
+    func `Create message with custom MIME version`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -143,8 +143,8 @@ struct RFC_5322_Message_Tests {
         #expect(message.mimeVersion == "2.0")
     }
 
-    @Test("Default MIME version is 1.0")
-    func defaultMimeVersion() throws {
+    @Test
+    func `Default MIME version is 1.0`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -159,8 +159,8 @@ struct RFC_5322_Message_Tests {
 
     // MARK: - Message Rendering
 
-    @Test("Render message to string contains all required headers")
-    func renderMessageContainsHeaders() throws {
+    @Test
+    func `Render message to string contains all required headers`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -180,8 +180,8 @@ struct RFC_5322_Message_Tests {
         #expect(rendered.contains("Hello, World!"))
     }
 
-    @Test("Render message with display names")
-    func renderMessageWithDisplayNames() throws {
+    @Test
+    func `Render message with display names`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress(
                 displayName: "John Doe",
@@ -201,8 +201,8 @@ struct RFC_5322_Message_Tests {
         #expect(rendered.contains("To: Jane Smith <jane@example.com>"))
     }
 
-    @Test("Render message does not include BCC header")
-    func renderMessageExcludesBCC() throws {
+    @Test
+    func `Render message does not include BCC header`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -220,8 +220,8 @@ struct RFC_5322_Message_Tests {
         #expect(!rendered.contains("bcc@example.com"))
     }
 
-    @Test("Render message includes CC header")
-    func renderMessageIncludesCC() throws {
+    @Test
+    func `Render message includes CC header`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -237,8 +237,8 @@ struct RFC_5322_Message_Tests {
         #expect(rendered.contains("Cc: cc@example.com"))
     }
 
-    @Test("Render message includes Reply-To header")
-    func renderMessageIncludesReplyTo() throws {
+    @Test
+    func `Render message includes Reply-To header`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -254,8 +254,8 @@ struct RFC_5322_Message_Tests {
         #expect(rendered.contains("Reply-To: replyto@example.com"))
     }
 
-    @Test("Render message includes additional headers")
-    func renderMessageIncludesAdditionalHeaders() throws {
+    @Test
+    func `Render message includes additional headers`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -275,8 +275,8 @@ struct RFC_5322_Message_Tests {
 
     // MARK: - Generate Message ID
 
-    @Test("Generate message ID format")
-    func generateMessageIdFormat() throws {
+    @Test
+    func `Generate message ID format`() throws {
         let from = try RFC_5322.EmailAddress("sender@example.com")
         let messageId = RFC_5322.Message.generateMessageId(
             from: from,

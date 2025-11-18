@@ -11,11 +11,11 @@ import RFC_5322
 
 // MARK: - RFC 5322 Format Style for Foundation.Date
 
-extension RFC_5322 {
+extension RFC_5322.Date {
     /// Format style for converting Foundation.Date to RFC 5322 date-time strings
     ///
     /// Enables the syntax: `Date().formatted(.rfc5322)`
-    public struct DateFormatStyle: Sendable {
+    public struct FormatStyle: Sendable {
         /// Timezone offset in seconds from UTC (default: 0 for UTC)
         public let timezoneOffsetSeconds: Int
 
@@ -28,7 +28,7 @@ extension RFC_5322 {
         /// Format a Foundation.Date as RFC 5322 date-time string
         public func format(_ date: Foundation.Date) -> String {
             let dateTime = RFC_5322.DateTime(
-                secondsSinceEpoch: date.timeIntervalSince1970,
+                secondsSinceEpoch: Int(date.timeIntervalSince1970),
                 timezoneOffsetSeconds: timezoneOffsetSeconds
             )
             return dateTime.format(dateTime)
@@ -37,7 +37,7 @@ extension RFC_5322 {
         /// Parse an RFC 5322 date-time string into a Foundation.Date
         public func parse(_ value: String) throws -> Foundation.Date {
             let dateTime = try RFC_5322.DateTime().parse(value)
-            return Foundation.Date(timeIntervalSince1970: dateTime.secondsSinceEpoch)
+            return Foundation.Date(timeIntervalSince1970: TimeInterval(dateTime.secondsSinceEpoch))
         }
     }
 }
@@ -61,7 +61,7 @@ extension Foundation.Date {
     /// let est = date.formatted(.rfc5322(timezoneOffsetSeconds: -18000))
     /// // "Mon, 01 Jan 2024 07:34:56 -0500"
     /// ```
-    public func formatted(_ style: RFC_5322.DateFormatStyle) -> String {
+    public func formatted(_ style: RFC_5322.Date.FormatStyle) -> String {
         style.format(self)
     }
 
@@ -78,7 +78,7 @@ extension Foundation.Date {
     /// ```swift
     /// let date = try Date("Mon, 01 Jan 2024 12:34:56 +0000", strategy: .rfc5322)
     /// ```
-    public init(_ value: String, strategy: RFC_5322.DateFormatStyle) throws {
+    public init(_ value: String, strategy: RFC_5322.Date.FormatStyle) throws {
         let foundationDate = try strategy.parse(value)
         self = foundationDate
     }
@@ -86,7 +86,7 @@ extension Foundation.Date {
 
 // MARK: - Static Accessors
 
-extension RFC_5322.DateFormatStyle {
+extension RFC_5322.Date.FormatStyle {
     /// RFC 5322 format style with UTC timezone (+0000)
     public static var rfc5322: Self {
         Self(timezoneOffsetSeconds: 0)
@@ -126,7 +126,7 @@ extension RFC_5322.DateTime {
     /// let foundationDate = dt.foundationDate
     /// ```
     public var foundationDate: Foundation.Date {
-        Foundation.Date(timeIntervalSince1970: secondsSinceEpoch)
+        Foundation.Date(timeIntervalSince1970: TimeInterval(secondsSinceEpoch))
     }
 
     /// Create an RFC 5322 DateTime from a Foundation.Date
@@ -144,7 +144,7 @@ extension RFC_5322.DateTime {
     /// ```
     public init(foundationDate date: Foundation.Date, timezoneOffsetSeconds: Int = 0) {
         self.init(
-            secondsSinceEpoch: date.timeIntervalSince1970,
+            secondsSinceEpoch: Int(date.timeIntervalSince1970),
             timezoneOffsetSeconds: timezoneOffsetSeconds
         )
     }

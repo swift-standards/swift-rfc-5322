@@ -11,7 +11,7 @@ import StandardsTestSupport
 
 extension PerformanceTests {
     @Suite(.serialized)
-    struct MessagePerformance {
+    struct `RFC_5322.Message` {
 
         // MARK: - Message Rendering Performance
 

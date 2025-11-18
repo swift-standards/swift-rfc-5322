@@ -8,25 +8,25 @@
 import RFC_5322
 import Testing
 
-@Suite("README Verification")
-struct ReadmeVerificationTests {
+@Suite
+struct `README Verification Tests` {
 
-    @Test("README Line 54-57: Parse email address")
-    func parseEmailAddress() throws {
+    @Test
+    func `README Line 54-57: Parse email address`() throws {
         let email = try RFC_5322.EmailAddress("user@example.com")
         #expect(email.localPart.description == "user")
         #expect(email.domain.name == "example.com")
     }
 
-    @Test("README Line 59-62: Parse with display name")
-    func parseWithDisplayName() throws {
+    @Test
+    func `README Line 59-62: Parse with display name`() throws {
         let named = try RFC_5322.EmailAddress("John Doe <john@example.com>")
         #expect(named.displayName == "John Doe")
         #expect(named.addressValue == "john@example.com")
     }
 
-    @Test("README Line 64-69: Create from components")
-    func createFromComponents() throws {
+    @Test
+    func `README Line 64-69: Create from components`() throws {
         let addr = try RFC_5322.EmailAddress(
             displayName: "Jane Smith",
             localPart: .init("jane"),
@@ -37,8 +37,8 @@ struct ReadmeVerificationTests {
         #expect(addr.domain.name == "example.com")
     }
 
-    @Test("README Line 75-89: Create a message")
-    func createMessage() throws {
+    @Test
+    func `README Line 75-89: Create a message`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress(
                 displayName: "John Doe",
@@ -61,8 +61,8 @@ struct ReadmeVerificationTests {
         #expect(String(message.body) == "Hello, World!")
     }
 
-    @Test("README Line 91-92: Render message")
-    func renderMessage() throws {
+    @Test
+    func `README Line 91-92: Render message`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress(
                 displayName: "John Doe",
@@ -84,8 +84,8 @@ struct ReadmeVerificationTests {
         #expect(emlContent.contains("Hello, World!"))
     }
 
-    @Test("README Line 107-122: Advanced message features")
-    func advancedMessageFeatures() throws {
+    @Test
+    func `README Line 107-122: Advanced message features`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -108,8 +108,8 @@ struct ReadmeVerificationTests {
         #expect(message.additionalHeaders.count == 2)
     }
 
-    @Test("README Line 128-129: Format date")
-    func formatDate() throws {
+    @Test
+    func `README Line 128-129: Format date`() throws {
         let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
         let dateString = dateTime.format(dateTime)
         #expect(!dateString.isEmpty)

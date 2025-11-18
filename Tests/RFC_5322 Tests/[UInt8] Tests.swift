@@ -9,13 +9,13 @@ import Testing
 @testable import RFC_5322
 import INCITS_4_1986
 
-@Suite("[UInt8] Conversions")
-struct UInt8_Array_Tests {
+@Suite
+struct `[UInt8] Conversions Tests` {
 
     // MARK: - EmailAddress to [UInt8]
 
-    @Test("Convert simple email address to bytes")
-    func emailAddressToBytes() throws {
+    @Test
+    func `Convert simple email address to bytes`() throws {
         let email = try RFC_5322.EmailAddress("user@example.com")
         let bytes = [UInt8](email)
         let string = String(decoding: bytes, as: UTF8.self)
@@ -23,8 +23,8 @@ struct UInt8_Array_Tests {
         #expect(string == "user@example.com")
     }
 
-    @Test("Convert email with display name to bytes")
-    func emailWithDisplayNameToBytes() throws {
+    @Test
+    func `Convert email with display name to bytes`() throws {
         let email = try RFC_5322.EmailAddress(
             displayName: "John Doe",
             localPart: .init("john"),
@@ -36,8 +36,8 @@ struct UInt8_Array_Tests {
         #expect(string == "John Doe <john@example.com>")
     }
 
-    @Test("Convert email with quoted display name to bytes")
-    func emailWithQuotedDisplayNameToBytes() throws {
+    @Test
+    func `Convert email with quoted display name to bytes`() throws {
         let email = try RFC_5322.EmailAddress(
             displayName: "Doe, John",
             localPart: .init("john"),
@@ -49,8 +49,8 @@ struct UInt8_Array_Tests {
         #expect(string == "\"Doe, John\" <john@example.com>")
     }
 
-    @Test("Email address bytes contain @ symbol")
-    func emailAddressBytesContainAt() throws {
+    @Test
+    func `Email address bytes contain @ symbol`() throws {
         let email = try RFC_5322.EmailAddress("user@example.com")
         let bytes = [UInt8](email)
 
@@ -59,8 +59,8 @@ struct UInt8_Array_Tests {
 
     // MARK: - Header to [UInt8]
 
-    @Test("Convert header to bytes")
-    func headerToBytes() {
+    @Test
+    func `Convert header to bytes`() {
         let header = RFC_5322.Header(name: .contentType, value: "text/plain")
         let bytes = [UInt8](header)
         let string = String(decoding: bytes, as: UTF8.self)
@@ -68,8 +68,8 @@ struct UInt8_Array_Tests {
         #expect(string == "Content-Type: text/plain")
     }
 
-    @Test("Convert custom header to bytes")
-    func customHeaderToBytes() {
+    @Test
+    func `Convert custom header to bytes`() {
         let header = RFC_5322.Header(name: "X-Custom", value: "custom value")
         let bytes = [UInt8].init(header)
         let string = String(decoding: bytes, as: UTF8.self)
@@ -77,8 +77,8 @@ struct UInt8_Array_Tests {
         #expect(string == "X-Custom: custom value")
     }
 
-    @Test("Header bytes contain colon and space")
-    func headerBytesFormat() {
+    @Test
+    func `Header bytes contain colon and space`() {
         let header = RFC_5322.Header(name: "X-Test", value: "value")
         let bytes = [UInt8](header)
 
@@ -92,8 +92,8 @@ struct UInt8_Array_Tests {
 
     // MARK: - DateTime to [UInt8]
 
-    @Test("Convert datetime to bytes")
-    func datetimeToBytes() throws {
+    @Test
+    func `Convert datetime to bytes`() throws {
         let dateTime = try RFC_5322.DateTime(
             year: 2024,
             month: 1,
@@ -111,8 +111,8 @@ struct UInt8_Array_Tests {
         #expect(string.contains("2024"))
     }
 
-    @Test("DateTime bytes match formatted string")
-    func datetimeBytesMatchFormatted() {
+    @Test
+    func `DateTime bytes match formatted string`() {
         let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
         let bytes = [UInt8](dateTime)
         let fromBytes = String(decoding: bytes, as: UTF8.self)
@@ -123,8 +123,8 @@ struct UInt8_Array_Tests {
 
     // MARK: - Message to [UInt8]
 
-    @Test("Convert basic message to bytes")
-    func basicMessageToBytes() throws {
+    @Test
+    func `Convert basic message to bytes`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -143,8 +143,8 @@ struct UInt8_Array_Tests {
         #expect(string.contains("Hello"))
     }
 
-    @Test("Message bytes use CRLF line endings")
-    func messageBytesUseCRLF() throws {
+    @Test
+    func `Message bytes use CRLF line endings`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -168,8 +168,8 @@ struct UInt8_Array_Tests {
         #expect(hasCRLF)
     }
 
-    @Test("Message bytes include all required headers")
-    func messageBytesIncludeAllHeaders() throws {
+    @Test
+    func `Message bytes include all required headers`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -191,8 +191,8 @@ struct UInt8_Array_Tests {
         #expect(string.contains("MIME-Version:"))
     }
 
-    @Test("Message bytes exclude BCC header")
-    func messageBytesExcludeBCC() throws {
+    @Test
+    func `Message bytes exclude BCC header`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -211,8 +211,8 @@ struct UInt8_Array_Tests {
         #expect(!string.contains("bcc@example.com"))
     }
 
-    @Test("Message bytes include CC header when present")
-    func messageBytesIncludeCC() throws {
+    @Test
+    func `Message bytes include CC header when present`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -229,8 +229,8 @@ struct UInt8_Array_Tests {
         #expect(string.contains("Cc: cc@example.com"))
     }
 
-    @Test("Message bytes include Reply-To when present")
-    func messageBytesIncludeReplyTo() throws {
+    @Test
+    func `Message bytes include Reply-To when present`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -247,8 +247,8 @@ struct UInt8_Array_Tests {
         #expect(string.contains("Reply-To: replyto@example.com"))
     }
 
-    @Test("Message bytes include additional headers")
-    func messageBytesIncludeAdditionalHeaders() throws {
+    @Test
+    func `Message bytes include additional headers`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -267,8 +267,8 @@ struct UInt8_Array_Tests {
         #expect(string.contains("X-Priority: 1"))
     }
 
-    @Test("Message bytes have empty line between headers and body")
-    func messageBytesEmptyLineSeparator() throws {
+    @Test
+    func `Message bytes have empty line between headers and body`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
@@ -293,8 +293,8 @@ struct UInt8_Array_Tests {
         #expect(hasDoubleCRLF)
     }
 
-    @Test("Message bytes include body at end")
-    func messageBytesIncludeBody() throws {
+    @Test
+    func `Message bytes include body at end`() throws {
         let bodyContent = "This is the message body"
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
@@ -311,8 +311,8 @@ struct UInt8_Array_Tests {
         #expect(string.hasSuffix(bodyContent))
     }
 
-    @Test("Multiple recipients separated by commas in bytes")
-    func multipleRecipientsCommaSeparated() throws {
+    @Test
+    func `Multiple recipients separated by commas in bytes`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [
@@ -333,8 +333,8 @@ struct UInt8_Array_Tests {
 
     // MARK: - Round-trip Tests
 
-    @Test("Message byte conversion is reversible")
-    func messageBytesRoundTrip() throws {
+    @Test
+    func `Message byte conversion is reversible`() throws {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],

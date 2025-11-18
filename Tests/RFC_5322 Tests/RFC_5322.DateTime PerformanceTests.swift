@@ -11,7 +11,7 @@ import StandardsTestSupport
 
 extension PerformanceTests {
     @Suite(.serialized)
-    struct DateTimePerformance {
+    struct `DateTime` {
 
         // MARK: - Construction Performance
 

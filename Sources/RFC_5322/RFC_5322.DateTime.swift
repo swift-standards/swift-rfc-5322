@@ -9,7 +9,7 @@ import Formatting
 
 // MARK: - Time Constants
 
-private enum TimeConstants {
+enum TimeConstants {
     static let secondsPerMinute = 60
     static let secondsPerHour = 3600
     static let secondsPerDay = 86400
@@ -34,7 +34,7 @@ extension RFC_5322 {
     /// ```
     public struct DateTime: Sendable, Equatable, Hashable, Comparable {
         /// Seconds since Unix epoch (1970-01-01 00:00:00 UTC)
-        public let secondsSinceEpoch: Double
+        public let secondsSinceEpoch: Int
 
         /// Timezone offset in seconds from UTC
         /// Positive values are east of UTC, negative values are west
@@ -45,7 +45,7 @@ extension RFC_5322 {
         /// - Parameters:
         ///   - secondsSinceEpoch: Seconds since Unix epoch (UTC)
         ///   - timezoneOffsetSeconds: Timezone offset in seconds (default: 0 for UTC)
-        public init(secondsSinceEpoch: Double = 0, timezoneOffsetSeconds: Int = 0) {
+        public init(secondsSinceEpoch: Int = 0, timezoneOffsetSeconds: Int = 0) {
             self.secondsSinceEpoch = secondsSinceEpoch
             self.timezoneOffsetSeconds = timezoneOffsetSeconds
         }
@@ -116,12 +116,11 @@ extension RFC_5322.DateTime {
         let daysSinceEpoch = Self.daysSinceEpoch(year: year, month: month, day: day)
 
         // Calculate total seconds (as UTC)
-        let totalSeconds = Double(
+        let totalSeconds =
             daysSinceEpoch * TimeConstants.secondsPerDay +
             hour * TimeConstants.secondsPerHour +
             minute * TimeConstants.secondsPerMinute +
             second
-        )
 
         self.init(secondsSinceEpoch: totalSeconds, timezoneOffsetSeconds: timezoneOffsetSeconds)
     }
@@ -133,8 +132,7 @@ extension RFC_5322.DateTime {
     /// Extract date components from date-time, adjusted for timezone offset
     public var components: RFC_5322.Date.Components {
         // Apply timezone offset to get local time
-        let localSeconds = secondsSinceEpoch + Double(timezoneOffsetSeconds)
-        let totalSeconds = Int(localSeconds)
+        let totalSeconds = secondsSinceEpoch + timezoneOffsetSeconds
         let totalDays = totalSeconds / TimeConstants.secondsPerDay
         let secondsInDay = totalSeconds % TimeConstants.secondsPerDay
 
@@ -160,10 +158,10 @@ extension RFC_5322.DateTime {
 
         let day = daysInCurrentMonth + 1
 
-        // Components calculated from valid epoch seconds should always be valid
-        // Using try! is safe here as this is an internal invariant
-        return try! RFC_5322.Date.Components(
-            year: year,
+        // Components calculated from valid epoch seconds are always valid
+        // Use unchecked initializer to bypass validation in hot path
+        return RFC_5322.Date.Components(
+            uncheckedYear: year,
             month: month,
             day: day,
             hour: hour,
@@ -189,63 +187,94 @@ extension RFC_5322.DateTime {
     public static let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 }
 
-// MARK: - Formatting Protocol
+// MARK: - DateTime Formatter (Separated formatting logic)
+
+extension RFC_5322.DateTime {
+    /// Dedicated formatter for RFC 5322 date-time strings
+    ///
+    /// Separates formatting logic from the data model, following protocol witness pattern.
+    /// Format: "Mon, 01 Jan 2024 12:34:56 +0000"
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let dt = RFC_5322.DateTime(year: 2024, month: 1, day: 1)
+    /// let formatted = RFC_5322.DateTime.Formatter.format(dt)
+    /// ```
+    public enum Formatter {
+        /// Formats a date-time as RFC 5322 date-time string
+        /// Optimized implementation avoiding multiple formatter allocations
+        public static func format(_ value: RFC_5322.DateTime) -> String {
+            let components = value.components
+
+            let dayName = RFC_5322.DateTime.dayNames[components.weekday]
+            let monthName = RFC_5322.DateTime.monthNames[components.month - 1]
+
+            // Manually format numbers with zero-padding to avoid formatter overhead
+            let day = formatTwoDigits(components.day)
+            let year = formatFourDigits(components.year)
+            let hour = formatTwoDigits(components.hour)
+            let minute = formatTwoDigits(components.minute)
+            let second = formatTwoDigits(components.second)
+
+            // Format timezone offset
+            let offsetSign = value.timezoneOffsetSeconds >= 0 ? "+" : "-"
+            let offsetHours = abs(value.timezoneOffsetSeconds) / TimeConstants.secondsPerHour
+            let offsetMinutes = (abs(value.timezoneOffsetSeconds) % TimeConstants.secondsPerHour) / TimeConstants.secondsPerMinute
+            let timezone = "\(offsetSign)\(formatTwoDigits(offsetHours))\(formatTwoDigits(offsetMinutes))"
+
+            return "\(dayName), \(day) \(monthName) \(year) \(hour):\(minute):\(second) \(timezone)"
+        }
+
+        /// Fast two-digit zero-padded formatting (00-99)
+        private static func formatTwoDigits(_ value: Int) -> String {
+            let tens = value / 10
+            let ones = value % 10
+            return "\(tens)\(ones)"
+        }
+
+        /// Fast four-digit zero-padded formatting (0000-9999)
+        private static func formatFourDigits(_ value: Int) -> String {
+            let thousands = value / 1000
+            let hundreds = (value % 1000) / 100
+            let tens = (value % 100) / 10
+            let ones = value % 10
+            return "\(thousands)\(hundreds)\(tens)\(ones)"
+        }
+    }
+}
+
+// MARK: - Formatting Protocol (Delegates to Formatter)
 
 extension RFC_5322.DateTime: Formatting {
     /// Formats a date-time as RFC 5322 date-time string
-    /// Format: "Mon, 01 Jan 2024 12:34:56 +0000"
-    /// Optimized implementation avoiding multiple formatter allocations
+    /// Delegates to RFC_5322.DateTime.Formatter for separation of concerns
     public func format(_ value: Self) -> String {
-        let components = value.components
-
-        let dayName = Self.dayNames[components.weekday]
-        let monthName = Self.monthNames[components.month - 1]
-
-        // Manually format numbers with zero-padding to avoid formatter overhead
-        let day = Self.formatTwoDigits(components.day)
-        let year = Self.formatFourDigits(components.year)
-        let hour = Self.formatTwoDigits(components.hour)
-        let minute = Self.formatTwoDigits(components.minute)
-        let second = Self.formatTwoDigits(components.second)
-
-        // Format timezone offset
-        let offsetSign = value.timezoneOffsetSeconds >= 0 ? "+" : "-"
-        let offsetHours = abs(value.timezoneOffsetSeconds) / TimeConstants.secondsPerHour
-        let offsetMinutes = (abs(value.timezoneOffsetSeconds) % TimeConstants.secondsPerHour) / TimeConstants.secondsPerMinute
-        let timezone = "\(offsetSign)\(Self.formatTwoDigits(offsetHours))\(Self.formatTwoDigits(offsetMinutes))"
-
-        return "\(dayName), \(day) \(monthName) \(year) \(hour):\(minute):\(second) \(timezone)"
-    }
-
-    /// Fast two-digit zero-padded formatting (00-99)
-    private static func formatTwoDigits(_ value: Int) -> String {
-        let tens = value / 10
-        let ones = value % 10
-        return "\(tens)\(ones)"
-    }
-
-    /// Fast four-digit zero-padded formatting (0000-9999)
-    private static func formatFourDigits(_ value: Int) -> String {
-        let thousands = value / 1000
-        let hundreds = (value % 1000) / 100
-        let tens = (value % 100) / 10
-        let ones = value % 10
-        return "\(thousands)\(hundreds)\(tens)\(ones)"
+        Formatter.format(value)
     }
 }
-// MARK: - Parsing
+// MARK: - DateTime Parser (Separated parsing logic)
 
-extension RFC_5322.DateTime: Format.Parsing {
-    /// Parse RFC 5322 date-time string
+extension RFC_5322.DateTime {
+    /// Dedicated parser for RFC 5322 date-time strings
+    ///
+    /// Separates parsing logic from the data model, following protocol witness pattern.
     /// Supports formats:
     /// - "Mon, 01 Jan 2024 12:34:56 +0000" (with seconds)
     /// - "Mon, 01 Jan 2024 12:34 +0000" (without seconds)
     /// - Timezone offsets like +0000, -0500, etc.
     ///
-    /// - Parameter value: The RFC 5322 date-time string
-    /// - Returns: DateTime
-    /// - Throws: RFC_5322.Date.Error if parsing fails
-    public func parse(_ value: String) throws -> Self {
+    /// ## Example
+    ///
+    /// ```swift
+    /// let dt = try RFC_5322.DateTime.Parser.parse("Mon, 01 Jan 2024 12:00:00 +0000")
+    /// ```
+    public enum Parser {
+        /// Parse RFC 5322 date-time string
+        /// - Parameter value: The RFC 5322 date-time string
+        /// - Returns: DateTime
+        /// - Throws: RFC_5322.Date.Error if parsing fails
+        public static func parse(_ value: String) throws -> RFC_5322.DateTime {
         // Split into components
         let parts = value.split(separator: " ").map(String.init)
 
@@ -257,7 +286,7 @@ extension RFC_5322.DateTime: Format.Parsing {
 
         // Parse day name (optional, for validation)
         let dayName = parts[0].split(separator: ",").map(String.init).first ?? parts[0]
-        guard let expectedWeekday = Self.dayNames.firstIndex(of: dayName) else {
+        guard let expectedWeekday = RFC_5322.DateTime.dayNames.firstIndex(of: dayName) else {
             throw RFC_5322.Date.Error.invalidDayName(dayName)
         }
 
@@ -267,7 +296,7 @@ extension RFC_5322.DateTime: Format.Parsing {
         }
 
         // Parse month
-        guard let monthIndex = Self.monthNames.firstIndex(of: parts[2]) else {
+        guard let monthIndex = RFC_5322.DateTime.monthNames.firstIndex(of: parts[2]) else {
             throw RFC_5322.Date.Error.invalidMonth(parts[2])
         }
         let month = monthIndex + 1
@@ -322,7 +351,7 @@ extension RFC_5322.DateTime: Format.Parsing {
         let timezoneOffsetSeconds = sign * (offsetHours * 3600 + offsetMinutes * 60)
 
         // Create date-time in UTC with validated components
-        let dateTime = try Self(
+        let dateTime = try RFC_5322.DateTime(
             year: year,
             month: month,
             day: day,
@@ -333,33 +362,147 @@ extension RFC_5322.DateTime: Format.Parsing {
 
         // Adjust for timezone offset to get UTC
         // If timezone is +0500, we subtract 5 hours to get UTC
-        let utcDateTime = dateTime.subtracting(Double(timezoneOffsetSeconds))
+        let utcDateTime = dateTime.subtracting(timezoneOffsetSeconds)
 
         // Validate weekday matches (using the local time components)
-        let localDateTime = Self(secondsSinceEpoch: utcDateTime.secondsSinceEpoch, timezoneOffsetSeconds: timezoneOffsetSeconds)
+        let localDateTime = RFC_5322.DateTime(secondsSinceEpoch: utcDateTime.secondsSinceEpoch, timezoneOffsetSeconds: timezoneOffsetSeconds)
         let actualWeekday = localDateTime.components.weekday
         guard actualWeekday == expectedWeekday else {
             throw RFC_5322.Date.Error.weekdayMismatch(
-                expected: Self.dayNames[expectedWeekday],
-                actual: Self.dayNames[actualWeekday]
+                expected: RFC_5322.DateTime.dayNames[expectedWeekday],
+                actual: RFC_5322.DateTime.dayNames[actualWeekday]
             )
         }
 
         return localDateTime
+        }
     }
 }
 
+// MARK: - Parsing Protocol (Delegates to Parser)
+
+extension RFC_5322.DateTime: Format.Parsing {
+    /// Parse RFC 5322 date-time string
+    /// Delegates to RFC_5322.DateTime.Parser for separation of concerns
+    public func parse(_ value: String) throws -> Self {
+        try Parser.parse(value)
+    }
+}
+
+
+// MARK: - Compositional Operations (Swifty monoid/functor-like behavior)
+
+extension RFC_5322.DateTime {
+    /// Returns a new DateTime by adding the specified number of seconds
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let dt = RFC_5322.DateTime(year: 2024, month: 1, day: 1)
+    /// let tomorrow = dt.addingSeconds(86400)  // Add 1 day
+    /// ```
+    public func addingSeconds(_ seconds: Int) -> Self {
+        Self(secondsSinceEpoch: secondsSinceEpoch + seconds, timezoneOffsetSeconds: timezoneOffsetSeconds)
+    }
+
+    /// Returns a new DateTime by subtracting the specified number of seconds
+    public func subtractingSeconds(_ seconds: Int) -> Self {
+        addingSeconds(-seconds)
+    }
+
+    /// Returns the time interval in seconds between this datetime and another
+    ///
+    /// Positive if `other` is later, negative if earlier.
+    public func distance(to other: Self) -> Int {
+        other.secondsSinceEpoch - secondsSinceEpoch
+    }
+
+    /// Returns a new DateTime with the timezone offset changed
+    ///
+    /// This creates a new view of the same instant in time with a different timezone.
+    /// The underlying UTC moment remains the same.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let utc = RFC_5322.DateTime(year: 2024, month: 1, day: 1, hour: 12)
+    /// let est = utc.withTimezone(offsetSeconds: -18000)  // UTC-5
+    /// // Same moment, different display
+    /// ```
+    public func withTimezone(offsetSeconds: Int) -> Self {
+        Self(secondsSinceEpoch: secondsSinceEpoch, timezoneOffsetSeconds: offsetSeconds)
+    }
+
+    /// Returns a new DateTime at the start of the day (00:00:00)
+    public func startOfDay() -> Self {
+        let components = self.components
+        return try! Self(
+            year: components.year,
+            month: components.month,
+            day: components.day,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            timezoneOffsetSeconds: timezoneOffsetSeconds
+        )
+    }
+
+    /// Returns a new DateTime at the end of the day (23:59:59)
+    public func endOfDay() -> Self {
+        let components = self.components
+        return try! Self(
+            year: components.year,
+            month: components.month,
+            day: components.day,
+            hour: 23,
+            minute: 59,
+            second: 59,
+            timezoneOffsetSeconds: timezoneOffsetSeconds
+        )
+    }
+
+    /// Returns a new DateTime with the specified component values changed
+    ///
+    /// Use `nil` for components you want to keep unchanged.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let dt = RFC_5322.DateTime(year: 2024, month: 1, day: 15, hour: 10)
+    /// let changed = try dt.setting(hour: 14, minute: 30)
+    /// // Same day, different time
+    /// ```
+    public func setting(
+        year: Int? = nil,
+        month: Int? = nil,
+        day: Int? = nil,
+        hour: Int? = nil,
+        minute: Int? = nil,
+        second: Int? = nil
+    ) throws -> Self {
+        let current = components
+        return try Self(
+            year: year ?? current.year,
+            month: month ?? current.month,
+            day: day ?? current.day,
+            hour: hour ?? current.hour,
+            minute: minute ?? current.minute,
+            second: second ?? current.second,
+            timezoneOffsetSeconds: timezoneOffsetSeconds
+        )
+    }
+}
 
 // MARK: - Internal Arithmetic
 
 extension RFC_5322.DateTime {
     /// Add a time interval to this date-time (internal - for timezone conversion)
-    internal func adding(_ interval: Double) -> Self {
+    internal func adding(_ interval: Int) -> Self {
         Self(secondsSinceEpoch: secondsSinceEpoch + interval)
     }
 
     /// Subtract a time interval from this date-time (internal - for timezone conversion)
-    internal func subtracting(_ interval: Double) -> Self {
+    internal func subtracting(_ interval: Int) -> Self {
         Self(secondsSinceEpoch: secondsSinceEpoch - interval)
     }
 }
@@ -380,37 +523,55 @@ extension RFC_5322.DateTime {
     }
 
     /// Optimized O(1) calculation of year and remaining days from days since epoch
-    /// Avoids O(n) loop iteration through years
+    /// Uses pure arithmetic based on Gregorian calendar structure
     private static func yearAndDays(fromDaysSinceEpoch days: Int) -> (year: Int, remainingDays: Int) {
-        // Use 400-year cycle for leap year calculation
-        // Every 400 years has exactly: 400*365 + 97 leap days = 146097 days
+        // Gregorian calendar has a 400-year cycle with exactly 146097 days
+        // This cycle contains: 97 leap years and 303 common years
         let cyclesOf400 = days / 146097
-        let remainingDays = days % 146097
-        let year = 1970 + cyclesOf400 * 400
+        var remainingDays = days % 146097
 
-        // Handle remaining years (less than 400)
-        // Approximate with average year length, then refine
-        var approximateYear = year + (remainingDays / TimeConstants.daysPerCommonYear)
+        // Within each 400-year cycle, 100-year periods vary:
+        // - First 3 periods: 36524 days each (24 leap years, 76 common years)
+        // - Last period: 36525 days (25 leap years because year x400 is always a leap year)
+        // However, since 1970 is 30 years into a cycle, we need special handling
 
-        // Refine: calculate exact days to approximateYear
-        var daysToYear = 0
-        for y in year..<approximateYear {
-            daysToYear += isLeapYear(y) ? TimeConstants.daysPerLeapYear : TimeConstants.daysPerCommonYear
+        // For epoch 1970, we're 30 years into the 1600-2000 cycle
+        // So the relevant centuries starting from 1970 are: 2000, 2100, 2200, 2300...
+        // 2000 is divisible by 400 (leap year), so 1970-2069 has 25 leap years = 36525 days
+        // 2100, 2200, 2300 are not divisible by 400, so they have 24 leap years = 36524 days each
+
+        var cyclesOf100: Int
+        if remainingDays >= 36525 {  // First century (1970-2070) includes year 2000
+            cyclesOf100 = 1
+            remainingDays -= 36525
+            // Add remaining centuries (each 36524 days)
+            let additionalCenturies = min(remainingDays / 36524, 2)  // Max 2 more (to stay within 400-year cycle)
+            cyclesOf100 += additionalCenturies
+            remainingDays -= additionalCenturies * 36524
+        } else {
+            cyclesOf100 = 0
         }
 
-        // Adjust if we overshot
-        while daysToYear > remainingDays {
-            approximateYear -= 1
-            daysToYear -= isLeapYear(approximateYear) ? TimeConstants.daysPerLeapYear : TimeConstants.daysPerCommonYear
+        // Within each 100-year period, 4-year periods have 1461 days
+        // (1 leap year, 3 common years)
+        // We use min(_, 24) to stay within the 100-year boundary
+        let cyclesOf4 = min(remainingDays / 1461, 24)
+        remainingDays -= cyclesOf4 * 1461
+
+        // Handle remaining 0-3 years, accounting for possible leap year
+        var year = 1970 + cyclesOf400 * 400 + cyclesOf100 * 100 + cyclesOf4 * 4
+
+        // Process up to 3 remaining years
+        for _ in 0..<3 {
+            let daysInYear = isLeapYear(year) ? 366 : 365
+            if remainingDays < daysInYear {
+                break
+            }
+            remainingDays -= daysInYear
+            year += 1
         }
 
-        // Adjust if we undershot
-        while daysToYear + (isLeapYear(approximateYear) ? TimeConstants.daysPerLeapYear : TimeConstants.daysPerCommonYear) <= remainingDays {
-            daysToYear += isLeapYear(approximateYear) ? TimeConstants.daysPerLeapYear : TimeConstants.daysPerCommonYear
-            approximateYear += 1
-        }
-
-        return (approximateYear, remainingDays - daysToYear)
+        return (year, remainingDays)
     }
 
     private static func daysSinceEpoch(year: Int, month: Int, day: Int) -> Int {
@@ -476,7 +637,7 @@ extension RFC_5322.DateTime: Codable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let seconds = try container.decode(Double.self, forKey: .secondsSinceEpoch)
+        let seconds = try container.decode(Int.self, forKey: .secondsSinceEpoch)
         let offset = try container.decodeIfPresent(Int.self, forKey: .timezoneOffsetSeconds) ?? 0
         self.init(secondsSinceEpoch: seconds, timezoneOffsetSeconds: offset)
     }

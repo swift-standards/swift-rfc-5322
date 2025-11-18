@@ -68,6 +68,31 @@ extension RFC_5322.Date {
             self.weekday = weekday
         }
 
+        /// Creates date components without validation (internal use only)
+        ///
+        /// This initializer bypasses validation and should only be used when component values
+        /// are known to be valid (e.g., computed from epoch seconds).
+        ///
+        /// - Warning: Using this with invalid values will create an invalid Components instance.
+        ///   Only use when values are guaranteed valid by construction.
+        internal init(
+            uncheckedYear year: Int,
+            month: Int,
+            day: Int,
+            hour: Int,
+            minute: Int,
+            second: Int,
+            weekday: Int
+        ) {
+            self.year = year
+            self.month = month
+            self.day = day
+            self.hour = hour
+            self.minute = minute
+            self.second = second
+            self.weekday = weekday
+        }
+
         /// Returns the number of days in the given month for the given year
         private static func daysInMonth(_ month: Int, year: Int) -> Int {
             switch month {
