@@ -27,14 +27,14 @@ struct `RFC_5322.EmailAddress Tests` {
         #expect(email.displayName == "John Doe")
         #expect(email.localPart.description == "john")
         #expect(email.domain.name == "example.com")
-        #expect(email.addressValue == "john@example.com")
+        #expect(email.address == "john@example.com")
     }
 
     @Test
     func `Parse email with quoted display name`() throws {
         let email = try RFC_5322.EmailAddress("\"Doe, John\" <john@example.com>")
         #expect(email.displayName == "Doe, John")
-        #expect(email.addressValue == "john@example.com")
+        #expect(email.address == "john@example.com")
     }
 
     // MARK: - Creation from Components
@@ -83,14 +83,14 @@ struct `RFC_5322.EmailAddress Tests` {
     func `Exclamation mark (!) is accepted in local-part`() throws {
         let email = try RFC_5322.EmailAddress("user!tag@example.com")
         #expect(email.localPart.description == "user!tag")
-        #expect(email.addressValue == "user!tag@example.com")
+        #expect(email.address == "user!tag@example.com")
     }
 
     @Test
     func `Pipe character (|) is accepted in local-part`() throws {
         let email = try RFC_5322.EmailAddress("user|tag@example.com")
         #expect(email.localPart.description == "user|tag")
-        #expect(email.addressValue == "user|tag@example.com")
+        #expect(email.address == "user|tag@example.com")
     }
 
     @Test
@@ -114,7 +114,7 @@ struct `RFC_5322.EmailAddress Tests` {
 
         for address in testAddresses {
             let email = try RFC_5322.EmailAddress(address)
-            #expect(email.addressValue == address)
+            #expect(email.address == address)
         }
     }
 
@@ -149,16 +149,16 @@ struct `RFC_5322.EmailAddress Tests` {
         #expect(formatted == "\"Doe, John\" <john@example.com>")
     }
 
-    // MARK: - addressValue Property
+    // MARK: - address Property
 
     @Test
-    func `addressValue returns email without display name`() throws {
+    func `address returns email without display name`() throws {
         let email = try RFC_5322.EmailAddress(
             displayName: "John Doe",
             localPart: .init("john"),
             domain: .init("example.com")
         )
-        #expect(email.addressValue == "john@example.com")
+        #expect(email.address == "john@example.com")
     }
 
     // MARK: - Validation Errors

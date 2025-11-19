@@ -22,7 +22,7 @@ struct `README Verification Tests` {
     func `README Line 59-62: Parse with display name`() throws {
         let named = try RFC_5322.EmailAddress("John Doe <john@example.com>")
         #expect(named.displayName == "John Doe")
-        #expect(named.addressValue == "john@example.com")
+        #expect(named.address == "john@example.com")
     }
 
     @Test
@@ -104,7 +104,7 @@ struct `README Verification Tests` {
 
         #expect(message.cc?.count == 1)
         #expect(message.bcc?.count == 1)
-        #expect(message.replyTo?.addressValue == "replyto@example.com")
+        #expect(message.replyTo?.address == "replyto@example.com")
         #expect(message.additionalHeaders.count == 2)
     }
 

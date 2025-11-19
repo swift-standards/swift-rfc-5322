@@ -27,9 +27,9 @@ struct `RFC_5322.Message Tests` {
             body: .init("Hello, World!".utf8)
         )
 
-        #expect(message.from.addressValue == "sender@example.com")
+        #expect(message.from.address == "sender@example.com")
         #expect(message.to.count == 1)
-        #expect(message.to[0].addressValue == "recipient@example.com")
+        #expect(message.to[0].address == "recipient@example.com")
         #expect(message.subject == "Test Message")
         #expect(message.messageId == "<test@example.com>")
         #expect(String(decoding: message.body, as: UTF8.self) == "Hello, World!")
@@ -51,9 +51,9 @@ struct `RFC_5322.Message Tests` {
         )
 
         #expect(message.to.count == 3)
-        #expect(message.to[0].addressValue == "alice@example.com")
-        #expect(message.to[1].addressValue == "bob@example.com")
-        #expect(message.to[2].addressValue == "charlie@example.com")
+        #expect(message.to[0].address == "alice@example.com")
+        #expect(message.to[1].address == "bob@example.com")
+        #expect(message.to[2].address == "charlie@example.com")
     }
 
     @Test
@@ -69,7 +69,7 @@ struct `RFC_5322.Message Tests` {
         )
 
         #expect(message.cc?.count == 1)
-        #expect(message.cc?[0].addressValue == "cc@example.com")
+        #expect(message.cc?[0].address == "cc@example.com")
     }
 
     @Test
@@ -85,7 +85,7 @@ struct `RFC_5322.Message Tests` {
         )
 
         #expect(message.bcc?.count == 1)
-        #expect(message.bcc?[0].addressValue == "bcc@example.com")
+        #expect(message.bcc?[0].address == "bcc@example.com")
     }
 
     @Test
@@ -100,7 +100,7 @@ struct `RFC_5322.Message Tests` {
             body: .init(utf8: "Test")
         )
 
-        #expect(message.replyTo?.addressValue == "replyto@example.com")
+        #expect(message.replyTo?.address == "replyto@example.com")
     }
 
     // MARK: - Additional Headers

@@ -59,7 +59,7 @@ print(email.domain.name) // "example.com"
 // Parse with display name
 let named = try RFC_5322.EmailAddress("John Doe <john@example.com>")
 print(named.displayName) // "John Doe"
-print(named.addressValue) // "john@example.com"
+print(named.address) // "john@example.com"
 
 // Create from components
 let addr = try RFC_5322.EmailAddress(
@@ -149,7 +149,7 @@ public struct EmailAddress: Hashable, Sendable {
     public init(_ string: String) throws
 
     public var stringValue: String      // Full format with display name
-    public var addressValue: String     // Just the email address part
+    public var address: String     // Just the email address part
     public func toRFC5321() throws -> RFC_5321.EmailAddress
 }
 ```
