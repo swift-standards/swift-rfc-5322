@@ -35,7 +35,7 @@ extension [UInt8] {
         if let displayName = emailAddress.displayName {
             // Check if quoting is needed
             let needsQuoting = displayName.contains(where: {
-                !$0.isLetter && !$0.isNumber && !$0.isWhitespace || $0.asciiValue == nil
+                !$0.isASCIILetter && !$0.isASCIIDigit && !$0.isASCIIWhitespace || $0.asciiValue == nil
             })
 
             if needsQuoting {

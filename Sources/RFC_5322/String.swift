@@ -5,6 +5,8 @@
 //  Type conversions for RFC 5322 Message
 //
 
+import INCITS_4_1986
+
 extension String {
     /// Creates RFC 5322 message string from a Message
     ///
@@ -28,7 +30,7 @@ extension String {
         if let name = emailAddress.displayName {
             // Quote the display name if it contains special characters or non-ASCII
             let needsQuoting = name.contains(where: {
-                !$0.isLetter && !$0.isNumber && !$0.isWhitespace || $0.asciiValue == nil
+                !$0.isASCIILetter && !$0.isASCIIDigit && !$0.isASCIIWhitespace || $0.asciiValue == nil
             })
             let quotedName = needsQuoting ? "\"\(name)\"" : name
             self = "\(quotedName) <\(emailAddress.localPart)@\(emailAddress.domain.name)>"  // Exactly one space before angle bracket

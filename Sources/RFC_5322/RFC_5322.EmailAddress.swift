@@ -110,6 +110,11 @@ extension RFC_5322.EmailAddress {
 
         /// Initialize with a string
         public init(_ string: String) throws {
+            // RFC 5322 is ASCII-only - validate before processing
+            guard string.asciiBytes != nil else {
+                throw ValidationError.nonASCIICharacters
+            }
+
             // Check overall length first
             guard string.count <= Limits.maxLength else {
                 throw ValidationError.localPartTooLong(string.count)
@@ -177,7 +182,7 @@ extension RFC_5322.EmailAddress {
 
 extension RFC_5322.EmailAddress {
     /// Just the email address part without display name
-    public var addressValue: String {
+    public var address: String {
         "\(localPart)@\(domain.name)"
     }
 }
@@ -191,6 +196,26 @@ extension RFC_5322.EmailAddress {
         case localPartTooLong(_ length: Int)
         case consecutiveDots
         case leadingOrTrailingDot
+        case nonASCIICharacters
+
+        public var errorDescription: String? {
+            switch self {
+            case .missingAtSign:
+                return "Email address must contain @"
+            case .invalidDotAtom:
+                return "Invalid local-part format (before @)"
+            case .invalidQuotedString:
+                return "Invalid quoted string format in local-part"
+            case .localPartTooLong(let length):
+                return "Local-part length \(length) exceeds maximum of \(Limits.maxLength)"
+            case .consecutiveDots:
+                return "Local-part cannot contain consecutive dots"
+            case .leadingOrTrailingDot:
+                return "Local-part cannot start or end with a dot"
+            case .nonASCIICharacters:
+                return "RFC 5322 email addresses must contain only ASCII characters"
+            }
+        }
     }
 }
 
