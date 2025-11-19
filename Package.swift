@@ -14,12 +14,7 @@ extension Target.Dependency {
     static var rfc5322Foundation: Self { .target(name: .rfc5322Foundation) }
     static var rfc1123: Self { .product(name: "RFC 1123", package: "swift-rfc-1123") }
     static var standards: Self { .product(name: "Standards", package: "swift-standards") }
-    static var time: Self {
-        .product(
-            name: "Time",
-            package: "swift-standards"
-        )
-    }
+    static var time: Self { .product(name: "Time", package: "swift-standards") }
     static var incits_4_1986: Self { .product(name: "INCITS 4 1986", package: "swift-incits-4-1986") }
     static var standardsTestSupport: Self { .product(name: "StandardsTestSupport", package: "swift-standards") }
 }

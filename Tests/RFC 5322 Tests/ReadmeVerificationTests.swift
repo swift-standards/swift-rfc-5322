@@ -98,7 +98,7 @@ struct `README Verification Tests` {
             body: Array("Meeting summary...".utf8),
             additionalHeaders: [
                 RFC_5322.Header(name: RFC_5322.Header.Name("X-Priority"), value: "1"),
-                RFC_5322.Header(name: .contentType, value: "text/plain; charset=utf-8"),
+                RFC_5322.Header(name: RFC_5322.Header.Name("X-Mailer"), value: "Custom Mailer"),
             ]
         )
 

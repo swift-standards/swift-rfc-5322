@@ -116,14 +116,14 @@ struct `RFC_5322.Message Tests` {
             body: .init(utf8: "Test"),
             additionalHeaders: [
                 RFC_5322.Header(name: "X-Priority", value: "1"),
-                RFC_5322.Header(name: .contentType, value: "text/plain; charset=utf-8")
+                RFC_5322.Header(name: .inReplyTo, value: "<previous@example.com>")
             ]
         )
 
         #expect(message.additionalHeaders.count == 2)
         #expect(message.additionalHeaders[0].name.rawValue == "X-Priority")
         #expect(message.additionalHeaders[0].value == "1")
-        #expect(message.additionalHeaders[1].name == .contentType)
+        #expect(message.additionalHeaders[1].name == .inReplyTo)
     }
 
     // MARK: - MIME Version

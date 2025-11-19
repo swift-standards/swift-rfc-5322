@@ -126,10 +126,10 @@ struct `String Tests` {
 
     @Test
     func `Convert header to string`() {
-        let header = RFC_5322.Header(name: .contentType, value: "text/plain")
+        let header = RFC_5322.Header(name: .subject, value: "Hello World")
         let string = String(decoding: [UInt8](header), as: UTF8.self)
 
-        #expect(string == "Content-Type: text/plain")
+        #expect(string == "Subject: Hello World")
     }
 
     @Test

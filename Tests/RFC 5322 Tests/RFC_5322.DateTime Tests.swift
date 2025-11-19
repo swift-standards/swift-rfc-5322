@@ -7,7 +7,7 @@
 
 import Testing
 import Foundation
-import Time
+import StandardTime
 @testable import RFC_5322
 
 @Suite
@@ -117,7 +117,7 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test
     func `Format datetime as RFC 5322 string`() throws {
-        let dateTime = try RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+        let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
         let formatted = dateTime.description
 
         #expect(!formatted.isEmpty)
@@ -183,7 +183,7 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test("Parse RFC 5322 datetime string")
     func parseDatetimeString() throws {
-        let parser = try RFC_5322.DateTime(secondsSinceEpoch: 0)
+        let parser = RFC_5322.DateTime(secondsSinceEpoch: 0)
         let dateTime = try parser.parse("Fri, 01 Jan 2021 12:00:00 +0000")
 
         let components = dateTime.components
@@ -197,7 +197,7 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test("Parse datetime with timezone offset")
     func parseDatetimeWithTimezone() throws {
-        let parser = try RFC_5322.DateTime(secondsSinceEpoch: 0)
+        let parser = RFC_5322.DateTime(secondsSinceEpoch: 0)
         let dateTime = try parser.parse("Mon, 15 Jan 2024 14:30:00 +0500")
 
         #expect(dateTime.timezoneOffsetSeconds == 18000)  // 5 hours = 18000 seconds
@@ -205,7 +205,7 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test("Parse datetime with negative timezone")
     func parseDatetimeWithNegativeTimezone() throws {
-        let parser = try RFC_5322.DateTime(secondsSinceEpoch: 0)
+        let parser = RFC_5322.DateTime(secondsSinceEpoch: 0)
         let dateTime = try parser.parse("Mon, 15 Jan 2024 14:30:00 -0800")
 
         #expect(dateTime.timezoneOffsetSeconds == -28800)  // -8 hours
@@ -213,7 +213,7 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test("Parse datetime validates weekday")
     func parseDatetimeValidatesWeekday() throws {
-        let parser = try RFC_5322.DateTime(secondsSinceEpoch: 0)
+        let parser = RFC_5322.DateTime(secondsSinceEpoch: 0)
 
         // January 1, 2021 is a Friday
         #expect(throws: RFC_5322.Date.Error.self) {
@@ -255,8 +255,8 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test("Compare datetimes")
     func compareDatetimes() throws {
-        let earlier = try RFC_5322.DateTime(secondsSinceEpoch: 1000)
-        let later = try RFC_5322.DateTime(secondsSinceEpoch: 2000)
+        let earlier = RFC_5322.DateTime(secondsSinceEpoch: 1000)
+        let later = RFC_5322.DateTime(secondsSinceEpoch: 2000)
 
         #expect(earlier < later)
         #expect(later > earlier)
@@ -264,8 +264,8 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test("Equal datetimes")
     func equalDatetimes() throws {
-        let dateTime1 = try RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
-        let dateTime2 = try RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+        let dateTime1 = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+        let dateTime2 = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
 
         #expect(dateTime1 == dateTime2)
     }
@@ -320,7 +320,7 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test
     func `Add time interval`() throws {
-        let dateTime = try RFC_5322.DateTime(secondsSinceEpoch: 1000)
+        let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1000)
         let later = dateTime.adding(500)
 
         #expect(later.secondsSinceEpoch == 1500)
@@ -328,7 +328,7 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test
     func `Subtract time interval`() throws {
-        let dateTime = try RFC_5322.DateTime(secondsSinceEpoch: 1000)
+        let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1000)
         let earlier = dateTime.subtracting(500)
 
         #expect(earlier.secondsSinceEpoch == 500)
@@ -338,7 +338,7 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test
     func `Handle Unix epoch`() throws {
-        let epoch = try RFC_5322.DateTime(secondsSinceEpoch: 0)
+        let epoch = RFC_5322.DateTime(secondsSinceEpoch: 0)
         let components = epoch.components
 
         #expect(components.year == 1970)

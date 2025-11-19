@@ -61,11 +61,11 @@ struct `[UInt8] Conversions Tests` {
 
     @Test
     func `Convert header to bytes`() {
-        let header = RFC_5322.Header(name: .contentType, value: "text/plain")
+        let header = RFC_5322.Header(name: .subject, value: "Hello World")
         let bytes = [UInt8](header)
         let string = String(decoding: bytes, as: UTF8.self)
 
-        #expect(string == "Content-Type: text/plain")
+        #expect(string == "Subject: Hello World")
     }
 
     @Test

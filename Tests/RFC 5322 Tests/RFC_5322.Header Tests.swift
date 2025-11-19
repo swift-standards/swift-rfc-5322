@@ -15,9 +15,9 @@ struct `RFC_5322.Header Tests` {
 
     @Test
     func `Create header with standard name`() {
-        let header = RFC_5322.Header(name: .contentType, value: "text/plain")
+        let header = RFC_5322.Header(name: .subject, value: "text/plain")
 
-        #expect(header.name == .contentType)
+        #expect(header.name == .subject)
         #expect(header.value == "text/plain")
     }
 
@@ -57,7 +57,7 @@ struct `RFC_5322.Header Tests` {
         #expect(RFC_5322.Header.Name.subject.rawValue == "Subject")
         #expect(RFC_5322.Header.Name.date.rawValue == "Date")
         #expect(RFC_5322.Header.Name.messageId.rawValue == "Message-ID")
-        #expect(RFC_5322.Header.Name.contentType.rawValue == "Content-Type")
+        #expect(RFC_5322.Header.Name.inReplyTo.rawValue == "In-Reply-To")
     }
 
     @Test
@@ -78,13 +78,13 @@ struct `RFC_5322.Header Tests` {
     }
 
     @Test
-    func `Header with colon in value`() {
+    func `Header with semicolon in value`() {
         let header = RFC_5322.Header(
-            name: .contentType,
-            value: "text/plain; charset=utf-8"
+            name: .subject,
+            value: "RE: Meeting; Notes"
         )
 
-        #expect(header.description == "Content-Type: text/plain; charset=utf-8")
+        #expect(header.description == "Subject: RE: Meeting; Notes")
     }
 
     // MARK: - Array Extensions - Subscript
@@ -92,33 +92,33 @@ struct `RFC_5322.Header Tests` {
     @Test
     func `Array subscript get header value`() {
         var headers = [RFC_5322.Header]()
-        headers.append(RFC_5322.Header(name: .contentType, value: "text/plain"))
+        headers.append(RFC_5322.Header(name: .subject, value: "text/plain"))
 
-        #expect(headers[.contentType] == "text/plain")
+        #expect(headers[.subject] == "text/plain")
     }
 
     @Test
     func `Array subscript returns nil for missing header`() {
         let headers = [RFC_5322.Header]()
 
-        #expect(headers[.contentType] == nil)
+        #expect(headers[.subject] == nil)
     }
 
     @Test
     func `Array subscript set header value`() {
         var headers = [RFC_5322.Header]()
-        headers[.contentType] = "text/html"
+        headers[.subject] = "text/html"
 
         #expect(headers.count == 1)
-        #expect(headers[0].name == .contentType)
+        #expect(headers[0].name == .subject)
         #expect(headers[0].value == "text/html")
     }
 
     @Test
     func `Array subscript set replaces existing header`() {
         var headers = [RFC_5322.Header]()
-        headers.append(RFC_5322.Header(name: .contentType, value: "text/plain"))
-        headers[.contentType] = "text/html"
+        headers.append(RFC_5322.Header(name: .subject, value: "text/plain"))
+        headers[.subject] = "text/html"
 
         #expect(headers.count == 1)
         #expect(headers[0].value == "text/html")
@@ -127,8 +127,8 @@ struct `RFC_5322.Header Tests` {
     @Test
     func `Array subscript set nil removes header`() {
         var headers = [RFC_5322.Header]()
-        headers.append(RFC_5322.Header(name: .contentType, value: "text/plain"))
-        headers[.contentType] = nil
+        headers.append(RFC_5322.Header(name: .subject, value: "text/plain"))
+        headers[.subject] = nil
 
         #expect(headers.count == 0)
     }
@@ -152,7 +152,7 @@ struct `RFC_5322.Header Tests` {
         var headers = [RFC_5322.Header]()
         headers.append(RFC_5322.Header(name: .received, value: "server1"))
         headers.append(RFC_5322.Header(name: .received, value: "server2"))
-        headers.append(RFC_5322.Header(name: .contentType, value: "text/plain"))
+        headers.append(RFC_5322.Header(name: .subject, value: "text/plain"))
 
         let received = headers.all(.received)
 
@@ -204,16 +204,16 @@ struct `RFC_5322.Header Tests` {
 
     @Test
     func `Headers with same name and value are equal`() {
-        let header1 = RFC_5322.Header(name: .contentType, value: "text/plain")
-        let header2 = RFC_5322.Header(name: .contentType, value: "text/plain")
+        let header1 = RFC_5322.Header(name: .subject, value: "text/plain")
+        let header2 = RFC_5322.Header(name: .subject, value: "text/plain")
 
         #expect(header1 == header2)
     }
 
     @Test
     func `Headers with different values are not equal`() {
-        let header1 = RFC_5322.Header(name: .contentType, value: "text/plain")
-        let header2 = RFC_5322.Header(name: .contentType, value: "text/html")
+        let header1 = RFC_5322.Header(name: .subject, value: "text/plain")
+        let header2 = RFC_5322.Header(name: .subject, value: "text/html")
 
         #expect(header1 != header2)
     }
@@ -239,14 +239,6 @@ struct `RFC_5322.Header Tests` {
         #expect(RFC_5322.Header.Name.sender.rawValue == "Sender")
         #expect(RFC_5322.Header.Name.inReplyTo.rawValue == "In-Reply-To")
         #expect(RFC_5322.Header.Name.references.rawValue == "References")
-    }
-
-    @Test
-    func `MIME headers exist`() {
-        #expect(RFC_5322.Header.Name.contentType.rawValue == "Content-Type")
-        #expect(RFC_5322.Header.Name.contentTransferEncoding.rawValue == "Content-Transfer-Encoding")
-        #expect(RFC_5322.Header.Name.mimeVersion.rawValue == "MIME-Version")
-        #expect(RFC_5322.Header.Name.contentDisposition.rawValue == "Content-Disposition")
     }
 
     @Test

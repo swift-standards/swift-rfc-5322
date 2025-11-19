@@ -47,7 +47,17 @@ extension String {
 }
 
 extension String {
+    /// Creates header field string from RFC 5322 Header
+    ///
+    /// Renders as "Name: Value" format per RFC 5322 Section 2.2.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let header = RFC_5322.Header(name: .subject, value: "Hello")
+    /// let rendered = String(header)  // "Subject: Hello"
+    /// ```
     public init(_ header: RFC_5322.Header) {
-        self = "\(header.name.rawValue): \(header.value)"
+        self = "\(header.name): \(header.value)"
     }
 }
