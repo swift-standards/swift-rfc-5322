@@ -7,7 +7,7 @@
 
 import Testing
 import Foundation
-import StandardTime
+import Time
 @testable import RFC_5322
 
 @Suite
@@ -17,14 +17,14 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test
     func `Create from seconds since epoch`() throws {
-        let dateTime = try RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+        let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
         #expect(dateTime.secondsSinceEpoch == 1609459200)
         #expect(dateTime.timezoneOffsetSeconds == 0)
     }
 
     @Test
     func `Create from epoch with timezone offset`() throws {
-        let dateTime = try RFC_5322.DateTime(
+        let dateTime = RFC_5322.DateTime(
             secondsSinceEpoch: 1609459200,
             timezoneOffsetSeconds: 3600  // +01:00
         )

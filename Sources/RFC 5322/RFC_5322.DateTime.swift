@@ -5,7 +5,7 @@
 // Format: "Mon, 01 Jan 2024 12:34:56 +0000"
 
 import Standards
-import StandardTime
+import Time
 
 extension RFC_5322 {
 

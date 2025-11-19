@@ -5,7 +5,7 @@
 //  Created by Coen ten Thije Boonkkamp on 18/11/2025.
 //
 
-import StandardTime
+import Time
 
 extension RFC_5322.Date {
 
@@ -37,7 +37,7 @@ extension RFC_5322.Date {
 
             // Validate day for the given month and year
             // Use Time module's calendar calculations (month already validated as 1-12)
-            let maxDay = StandardTime.Time.Calendar.Gregorian.daysInMonths(year: year)[month - 1]
+            let maxDay = Time.Calendar.Gregorian.daysInMonths(year: year)[month - 1]
             guard (1...maxDay).contains(day) else {
                 throw RFC_5322.Date.Error.dayOutOfRange(day, month: month, year: year)
             }

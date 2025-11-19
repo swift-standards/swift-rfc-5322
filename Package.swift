@@ -17,8 +17,7 @@ extension Target.Dependency {
     static var time: Self {
         .product(
             name: "Time",
-            package: "swift-standards",
-            moduleAliases: ["Time": "StandardTime"]
+            package: "swift-standards"
         )
     }
     static var incits_4_1986: Self { .product(name: "INCITS 4 1986", package: "swift-incits-4-1986") }
