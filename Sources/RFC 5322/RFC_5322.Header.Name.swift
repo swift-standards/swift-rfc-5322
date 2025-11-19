@@ -5,6 +5,8 @@
 //  Created by Coen ten Thije Boonkkamp on 19/11/2025.
 //
 
+import INCITS_4_1986
+
 // MARK: - Header.Name
 
 extension RFC_5322.Header {

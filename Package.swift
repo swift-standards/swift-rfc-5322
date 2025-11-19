@@ -7,8 +7,6 @@ extension String {
     static let rfc5322Foundation: Self = "RFC 5322 Foundation"
 }
 
-extension String { var tests: Self { self + " Tests" } }
-
 extension Target.Dependency {
     static var rfc5322: Self { .target(name: .rfc5322) }
     static var rfc5322Foundation: Self { .target(name: .rfc5322Foundation) }
@@ -72,3 +70,17 @@ let package = Package(
     ],
     swiftLanguageModes: [.v6]
 )
+
+extension String {
+    var tests: Self { self + " Tests" }
+    var foundation: Self { self + " Foundation" }
+}
+
+for target in package.targets where ![.system, .binary, .plugin].contains(target.type) {
+    let existing = target.swiftSettings ?? []
+    target.swiftSettings = existing + [
+        .enableUpcomingFeature("ExistentialAny"),
+        .enableUpcomingFeature("InternalImportsByDefault"),
+        .enableUpcomingFeature("MemberImportVisibility")
+    ]
+}

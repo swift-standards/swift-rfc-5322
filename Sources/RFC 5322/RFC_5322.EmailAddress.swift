@@ -6,7 +6,7 @@
 //
 
 import INCITS_4_1986
-import RFC_1123
+public import RFC_1123
 import RegexBuilder
 
 extension RFC_5322 {
@@ -225,12 +225,12 @@ extension RFC_5322.EmailAddress: CustomStringConvertible {
 }
 
 extension RFC_5322.EmailAddress: Codable {
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(self.rawValue)
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         let rawValue = try container.decode(String.self)
         try self.init(rawValue)

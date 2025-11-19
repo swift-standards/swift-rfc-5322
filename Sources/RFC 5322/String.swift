@@ -6,6 +6,7 @@
 //
 
 import INCITS_4_1986
+import RFC_1123
 
 extension String {
     /// Creates RFC 5322 message string from a Message

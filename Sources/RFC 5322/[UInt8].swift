@@ -5,8 +5,9 @@
 //  Type conversions for RFC 5322 Message
 //
 
-import Standards
+public import Standards
 import INCITS_4_1986
+import RFC_1123
 
 // MARK: - Constants
 

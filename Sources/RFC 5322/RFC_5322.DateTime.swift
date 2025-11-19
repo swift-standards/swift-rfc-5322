@@ -4,8 +4,8 @@
 // RFC 5322 date-time representation and formatting
 // Format: "Mon, 01 Jan 2024 12:34:56 +0000"
 
-import Standards
-import Time
+public import Standards
+public import Time
 
 extension RFC_5322 {
 
@@ -533,14 +533,14 @@ extension RFC_5322.DateTime: Codable {
         case timezoneOffsetSeconds
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let seconds = try container.decode(Int.self, forKey: .secondsSinceEpoch)
         let offset = try container.decodeIfPresent(Int.self, forKey: .timezoneOffsetSeconds) ?? 0
         self.init(secondsSinceEpoch: seconds, timezoneOffsetSeconds: offset)
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(secondsSinceEpoch, forKey: .secondsSinceEpoch)
         try container.encode(timezoneOffsetSeconds, forKey: .timezoneOffsetSeconds)

@@ -6,7 +6,7 @@
 //
 
 import RFC_1123
-import Standards
+public import Standards
 import INCITS_4_1986
 
 extension RFC_5322 {

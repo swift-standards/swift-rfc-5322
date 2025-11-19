@@ -5,7 +5,7 @@
 //  Created by Coen ten Thije Boonkkamp on 18/11/2025.
 //
 
-import Time
+public import Time
 
 extension RFC_5322.Date {
 
