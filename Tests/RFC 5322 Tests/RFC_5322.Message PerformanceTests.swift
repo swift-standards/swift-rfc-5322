@@ -20,7 +20,7 @@ extension PerformanceTests {
             let message = RFC_5322.Message(
                 from: try RFC_5322.EmailAddress("sender@example.com"),
                 to: [try RFC_5322.EmailAddress("recipient@example.com")],
-                date: .init(),
+                date: .init(secondsSinceEpoch: 0),
                 subject: "Test",
                 messageId: "<test@example.com>",
                 body: Array("Hello, World!".utf8)
@@ -37,7 +37,7 @@ extension PerformanceTests {
                     try RFC_5322.EmailAddress("bob@example.com"),
                     try RFC_5322.EmailAddress("charlie@example.com")
                 ],
-                date: .init(),
+                date: .init(secondsSinceEpoch: 0),
                 subject: "Group Message",
                 messageId: "<group@example.com>",
                 body: Array("Hello everyone!".utf8)
@@ -53,7 +53,7 @@ extension PerformanceTests {
                 cc: [try RFC_5322.EmailAddress("cc@example.com")],
                 bcc: [try RFC_5322.EmailAddress("bcc@example.com")],
                 replyTo: try RFC_5322.EmailAddress("replyto@example.com"),
-                date: .init(),
+                date: .init(secondsSinceEpoch: 0),
                 subject: "Full Message",
                 messageId: "<full@example.com>",
                 body: Array("Test body".utf8),
@@ -70,7 +70,7 @@ extension PerformanceTests {
             let message = RFC_5322.Message(
                 from: try RFC_5322.EmailAddress("sender@example.com"),
                 to: [try RFC_5322.EmailAddress("recipient@example.com")],
-                date: .init(),
+                date: .init(secondsSinceEpoch: 0),
                 subject: "Large Message",
                 messageId: "<large@example.com>",
                 body: Array(largeBody.utf8)
@@ -85,7 +85,7 @@ extension PerformanceTests {
             let message = RFC_5322.Message(
                 from: try RFC_5322.EmailAddress("sender@example.com"),
                 to: [try RFC_5322.EmailAddress("recipient@example.com")],
-                date: .init(),
+                date: .init(secondsSinceEpoch: 0),
                 subject: "Test",
                 messageId: "<test@example.com>",
                 body: Array("Hello".utf8)
@@ -99,7 +99,7 @@ extension PerformanceTests {
             let message = RFC_5322.Message(
                 from: try RFC_5322.EmailAddress("sender@example.com"),
                 to: [try RFC_5322.EmailAddress("recipient@example.com")],
-                date: .init(),
+                date: .init(secondsSinceEpoch: 0),
                 subject: "Large",
                 messageId: "<large@example.com>",
                 body: Array(largeBody.utf8)

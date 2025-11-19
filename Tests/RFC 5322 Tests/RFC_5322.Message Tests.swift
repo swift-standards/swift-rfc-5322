@@ -21,7 +21,7 @@ struct `RFC_5322.Message Tests` {
         let message = RFC_5322.Message(
             from: from,
             to: to,
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test Message",
             messageId: "<test@example.com>",
             body: .init("Hello, World!".utf8)
@@ -44,7 +44,7 @@ struct `RFC_5322.Message Tests` {
                 try RFC_5322.EmailAddress("bob@example.com"),
                 try RFC_5322.EmailAddress("charlie@example.com")
             ],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Group Message",
             messageId: "<group@example.com>",
             body: .init(utf8: "Hello")
@@ -62,7 +62,7 @@ struct `RFC_5322.Message Tests` {
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("primary@example.com")],
             cc: [try RFC_5322.EmailAddress("cc@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test CC",
             messageId: "<cc-test@example.com>",
             body: .init(utf8: "Test")
@@ -78,7 +78,7 @@ struct `RFC_5322.Message Tests` {
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("primary@example.com")],
             bcc: [try RFC_5322.EmailAddress("bcc@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test BCC",
             messageId: "<bcc-test@example.com>",
             body: .init(utf8: "Test")
@@ -94,7 +94,7 @@ struct `RFC_5322.Message Tests` {
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
             replyTo: try RFC_5322.EmailAddress("replyto@example.com"),
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test Reply-To",
             messageId: "<reply-test@example.com>",
             body: .init(utf8: "Test")
@@ -110,7 +110,7 @@ struct `RFC_5322.Message Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test Headers",
             messageId: "<headers-test@example.com>",
             body: .init(utf8: "Test"),
@@ -133,7 +133,7 @@ struct `RFC_5322.Message Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test MIME",
             messageId: "<mime-test@example.com>",
             body: .init(utf8: "Test"),
@@ -148,7 +148,7 @@ struct `RFC_5322.Message Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: .init(utf8: "Test")
@@ -189,7 +189,7 @@ struct `RFC_5322.Message Tests` {
                 domain: .init("example.com")
             ),
             to: [try RFC_5322.EmailAddress("Jane Smith <jane@example.com>")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: .init(utf8: "Test")
@@ -207,7 +207,7 @@ struct `RFC_5322.Message Tests` {
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
             bcc: [try RFC_5322.EmailAddress("bcc@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test BCC",
             messageId: "<bcc-test@example.com>",
             body: .init(utf8: "Test")
@@ -226,7 +226,7 @@ struct `RFC_5322.Message Tests` {
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
             cc: [try RFC_5322.EmailAddress("cc@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test CC",
             messageId: "<cc-test@example.com>",
             body: .init(utf8: "Test")
@@ -243,7 +243,7 @@ struct `RFC_5322.Message Tests` {
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
             replyTo: try RFC_5322.EmailAddress("replyto@example.com"),
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: .init(utf8: "Test")
@@ -259,7 +259,7 @@ struct `RFC_5322.Message Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: .init(utf8: "Test"),

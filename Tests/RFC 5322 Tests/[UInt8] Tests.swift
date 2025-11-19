@@ -128,7 +128,7 @@ struct `[UInt8] Conversions Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array("Hello".utf8)
@@ -148,7 +148,7 @@ struct `[UInt8] Conversions Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array("Test".utf8)
@@ -173,7 +173,7 @@ struct `[UInt8] Conversions Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test Subject",
             messageId: "<unique@example.com>",
             body: Array("Body".utf8)
@@ -197,7 +197,7 @@ struct `[UInt8] Conversions Tests` {
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
             bcc: [try RFC_5322.EmailAddress("bcc@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array("Test".utf8)
@@ -217,7 +217,7 @@ struct `[UInt8] Conversions Tests` {
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
             cc: [try RFC_5322.EmailAddress("cc@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array("Test".utf8)
@@ -235,7 +235,7 @@ struct `[UInt8] Conversions Tests` {
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
             replyTo: try RFC_5322.EmailAddress("replyto@example.com"),
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array("Test".utf8)
@@ -252,7 +252,7 @@ struct `[UInt8] Conversions Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array("Test".utf8),
@@ -272,7 +272,7 @@ struct `[UInt8] Conversions Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array("Body content".utf8)
@@ -299,7 +299,7 @@ struct `[UInt8] Conversions Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array(bodyContent.utf8)
@@ -319,7 +319,7 @@ struct `[UInt8] Conversions Tests` {
                 try RFC_5322.EmailAddress("alice@example.com"),
                 try RFC_5322.EmailAddress("bob@example.com")
             ],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array("Test".utf8)

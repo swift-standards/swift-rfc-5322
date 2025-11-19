@@ -84,7 +84,7 @@ struct `String Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: .init(),
+            date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array("Test".utf8)

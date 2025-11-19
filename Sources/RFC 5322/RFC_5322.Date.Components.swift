@@ -5,6 +5,8 @@
 //  Created by Coen ten Thije Boonkkamp on 18/11/2025.
 //
 
+import StandardTime
+
 extension RFC_5322.Date {
 
     /// Date components extracted from a date-time
@@ -34,7 +36,8 @@ extension RFC_5322.Date {
             }
 
             // Validate day for the given month and year
-            let maxDay = Self.daysInMonth(month, year: year)
+            // Use Time module's calendar calculations (month already validated as 1-12)
+            let maxDay = StandardTime.Time.Calendar.Gregorian.daysInMonths(year: year)[month - 1]
             guard (1...maxDay).contains(day) else {
                 throw RFC_5322.Date.Error.dayOutOfRange(day, month: month, year: year)
             }
@@ -91,25 +94,6 @@ extension RFC_5322.Date {
             self.minute = minute
             self.second = second
             self.weekday = weekday
-        }
-
-        /// Returns the number of days in the given month for the given year
-        private static func daysInMonth(_ month: Int, year: Int) -> Int {
-            switch month {
-            case 1, 3, 5, 7, 8, 10, 12:
-                return 31
-            case 4, 6, 9, 11:
-                return 30
-            case 2:
-                return isLeapYear(year) ? 29 : 28
-            default:
-                return 0
-            }
-        }
-
-        /// Returns true if the year is a leap year
-        private static func isLeapYear(_ year: Int) -> Bool {
-            (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
         }
     }
 }

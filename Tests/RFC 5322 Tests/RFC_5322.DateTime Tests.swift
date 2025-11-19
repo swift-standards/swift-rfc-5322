@@ -7,6 +7,7 @@
 
 import Testing
 import Foundation
+import StandardTime
 @testable import RFC_5322
 
 @Suite
@@ -375,10 +376,10 @@ struct `RFC_5322.DateTime Tests` {
 
     @Test
     func `Reject invalid month`() {
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2024, month: 13, day: 1)
         }
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2024, month: 0, day: 1)
         }
     }
@@ -386,15 +387,15 @@ struct `RFC_5322.DateTime Tests` {
     @Test
     func `Reject invalid day for month`() {
         // February 30 doesn't exist
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2024, month: 2, day: 30)
         }
         // April has only 30 days
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2024, month: 4, day: 31)
         }
         // Day 0 is invalid
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2024, month: 1, day: 0)
         }
     }
@@ -406,27 +407,27 @@ struct `RFC_5322.DateTime Tests` {
             _ = try RFC_5322.DateTime(year: 2024, month: 2, day: 29)
         }
         // 2023 is not a leap year, Feb 29 is invalid
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2023, month: 2, day: 29)
         }
     }
 
     @Test
     func `Reject invalid hour`() {
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2024, month: 1, day: 1, hour: 24)
         }
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2024, month: 1, day: 1, hour: -1)
         }
     }
 
     @Test
     func `Reject invalid minute`() {
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2024, month: 1, day: 1, minute: 60)
         }
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2024, month: 1, day: 1, minute: -1)
         }
     }
@@ -438,10 +439,10 @@ struct `RFC_5322.DateTime Tests` {
             _ = try RFC_5322.DateTime(year: 2024, month: 1, day: 1, second: 60)
         }
         // Second 61 is invalid
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2024, month: 1, day: 1, second: 61)
         }
-        #expect(throws: RFC_5322.Date.Error.self) {
+        #expect(throws: Time.Error.self) {
             _ = try RFC_5322.DateTime(year: 2024, month: 1, day: 1, second: -1)
         }
     }

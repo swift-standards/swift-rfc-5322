@@ -62,6 +62,7 @@ let package = Package(
             name: .rfc5322.tests,
             dependencies: [
                 .rfc5322,
+                .time,
                 .incits_4_1986,
                 .standardsTestSupport
             ]

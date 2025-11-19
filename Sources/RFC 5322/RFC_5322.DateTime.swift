@@ -5,7 +5,7 @@
 // Format: "Mon, 01 Jan 2024 12:34:56 +0000"
 
 import Standards
-import Time
+import StandardTime
 
 extension RFC_5322 {
 
@@ -108,7 +108,8 @@ extension RFC_5322.DateTime {
         second: Int = 0,
         timezoneOffsetSeconds: Int = 0
     ) throws {
-        // Create Time with validation (Time.init throws on invalid components)
+        // Create Time with validation - Time.Error propagates naturally
+        // This is correct: Time owns calendar validation, RFC 5322 delegates to it
         let time = try Time(
             year: year,
             month: month,
@@ -116,30 +117,6 @@ extension RFC_5322.DateTime {
             hour: hour,
             minute: minute,
             second: second
-        )
-
-        // Convert Time.Weekday to weekday number (0=Sunday)
-        let weekdayNumber: Int
-        switch time.weekday {
-        case .sunday: weekdayNumber = 0
-        case .monday: weekdayNumber = 1
-        case .tuesday: weekdayNumber = 2
-        case .wednesday: weekdayNumber = 3
-        case .thursday: weekdayNumber = 4
-        case .friday: weekdayNumber = 5
-        case .saturday: weekdayNumber = 6
-        }
-
-        // Validate all components by attempting to create Components
-        // This provides consistent validation logic
-        _ = try RFC_5322.Date.Components(
-            year: year,
-            month: month,
-            day: day,
-            hour: hour,
-            minute: minute,
-            second: second,
-            weekday: weekdayNumber
         )
 
         self.init(time: time, timezoneOffset: Time.TimezoneOffset(seconds: timezoneOffsetSeconds))
@@ -371,7 +348,10 @@ extension RFC_5322.DateTime {
             throw RFC_5322.Date.Error.invalidTimezone(timezoneString)
         }
 
-        let timezoneOffsetSeconds = sign * (offsetHours * 3600 + offsetMinutes * 60)
+        let timezoneOffsetSeconds = sign * (
+            offsetHours * Time.Calendar.Gregorian.TimeConstants.secondsPerHour +
+            offsetMinutes * Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
+        )
 
         // Create date-time in UTC with validated components
         let dateTime = try RFC_5322.DateTime(
