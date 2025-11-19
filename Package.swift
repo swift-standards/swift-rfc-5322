@@ -3,8 +3,8 @@
 import PackageDescription
 
 extension String {
-    static let rfc5322: Self = "RFC_5322"
-    static let rfc5322Foundation: Self = "RFC_5322_Foundation"
+    static let rfc5322: Self = "RFC 5322"
+    static let rfc5322Foundation: Self = "RFC 5322 Foundation"
 }
 
 extension String { var tests: Self { self + " Tests" } }
@@ -12,9 +12,15 @@ extension String { var tests: Self { self + " Tests" } }
 extension Target.Dependency {
     static var rfc5322: Self { .target(name: .rfc5322) }
     static var rfc5322Foundation: Self { .target(name: .rfc5322Foundation) }
-    static var rfc1123: Self { .product(name: "RFC_1123", package: "swift-rfc-1123") }
+    static var rfc1123: Self { .product(name: "RFC 1123", package: "swift-rfc-1123") }
     static var standards: Self { .product(name: "Standards", package: "swift-standards") }
-    static var time: Self { .product(name: "Time", package: "swift-standards") }
+    static var time: Self {
+        .product(
+            name: "Time",
+            package: "swift-standards",
+            moduleAliases: ["Time": "StandardTime"]
+        )
+    }
     static var incits_4_1986: Self { .product(name: "INCITS 4 1986", package: "swift-incits-4-1986") }
     static var standardsTestSupport: Self { .product(name: "StandardsTestSupport", package: "swift-standards") }
 }
@@ -64,7 +70,8 @@ let package = Package(
             name: .rfc5322Foundation.tests,
             dependencies: [
                 .rfc5322,
-                .rfc5322Foundation
+                .rfc5322Foundation,
+                .time
             ]
         ),
     ],

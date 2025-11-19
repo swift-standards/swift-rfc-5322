@@ -36,7 +36,7 @@ extension RFC_5322.Date {
 
         /// Parse an RFC 5322 date-time string into a Foundation.Date
         public func parse(_ value: String) throws -> Foundation.Date {
-            let dateTime = try RFC_5322.DateTime().parse(value)
+            let dateTime = try RFC_5322.DateTime.Parser.parse(value)
             return Foundation.Date(timeIntervalSince1970: TimeInterval(dateTime.secondsSinceEpoch))
         }
     }
@@ -88,8 +88,8 @@ extension Foundation.Date {
 
 extension RFC_5322.Date.FormatStyle {
     /// RFC 5322 format style with UTC timezone (+0000)
-    public static var rfc5322: Self {
-        Self(timezoneOffsetSeconds: 0)
+    public static var rfc5322: RFC_5322.Date.FormatStyle {
+        RFC_5322.Date.FormatStyle(timezoneOffsetSeconds: 0)
     }
 
     /// RFC 5322 format style with custom timezone offset
@@ -178,7 +178,7 @@ extension RFC_5322.DateTime {
     ///
     /// - Parameter style: Any Foundation.Date.FormatStyle
     /// - Returns: Formatted string
-    public func formatted<F: FormatStyle>(_ style: F) -> F.FormatOutput
+    public func formatted<F: Foundation.FormatStyle>(_ style: F) -> F.FormatOutput
         where F.FormatInput == Foundation.Date
     {
         foundationDate.formatted(style)
