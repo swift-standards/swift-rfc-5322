@@ -5,17 +5,7 @@
 // Format: "Mon, 01 Jan 2024 12:34:56 +0000"
 
 import Standards
-import Formatting
-
-// MARK: - Time Constants
-
-enum TimeConstants {
-    static let secondsPerMinute = 60
-    static let secondsPerHour = 3600
-    static let secondsPerDay = 86400
-    static let daysPerCommonYear = 365
-    static let daysPerLeapYear = 366
-}
+import Time
 
 extension RFC_5322 {
 
@@ -25,29 +15,48 @@ extension RFC_5322 {
     ///
     /// Represents a date-time value per RFC 5322 section 3.3.
     /// The RFC calls this a "date-time" (not "timestamp" or "date").
-    /// Stores seconds since Unix epoch (1970-01-01 00:00:00 UTC) internally.
+    /// Uses Standards/Time as the foundation for all calendar logic.
     ///
     /// Example:
     /// ```swift
-    /// let dateTime = RFC_5322.DateTime(year: 2024, month: 1, day: 1, hour: 12, minute: 30)
+    /// let dateTime = try RFC_5322.DateTime(year: 2024, month: 1, day: 1, hour: 12, minute: 30)
     /// print(dateTime.format(dateTime))  // "Mon, 01 Jan 2024 12:30:00 +0000"
     /// ```
     public struct DateTime: Sendable, Equatable, Hashable, Comparable {
-        /// Seconds since Unix epoch (1970-01-01 00:00:00 UTC)
-        public let secondsSinceEpoch: Int
+        /// The UTC time
+        public let time: Time
 
-        /// Timezone offset in seconds from UTC
+        /// Timezone offset from UTC
         /// Positive values are east of UTC, negative values are west
-        /// Example: +0100 = 3600, -0500 = -18000
-        public let timezoneOffsetSeconds: Int
+        /// Example: +0100 = 1 hour, -0500 = -5 hours
+        public let timezoneOffset: Time.TimezoneOffset
+
+        /// Create a date-time from Time and timezone offset
+        /// - Parameters:
+        ///   - time: The UTC time
+        ///   - timezoneOffset: Timezone offset (default: UTC)
+        public init(time: Time, timezoneOffset: Time.TimezoneOffset = .utc) {
+            self.time = time
+            self.timezoneOffset = timezoneOffset
+        }
 
         /// Create a date-time from seconds since epoch
         /// - Parameters:
         ///   - secondsSinceEpoch: Seconds since Unix epoch (UTC)
         ///   - timezoneOffsetSeconds: Timezone offset in seconds (default: 0 for UTC)
-        public init(secondsSinceEpoch: Int = 0, timezoneOffsetSeconds: Int = 0) {
-            self.secondsSinceEpoch = secondsSinceEpoch
-            self.timezoneOffsetSeconds = timezoneOffsetSeconds
+        public init(secondsSinceEpoch: Int, timezoneOffsetSeconds: Int = 0) {
+            self.time = Time(secondsSinceEpoch: secondsSinceEpoch)
+            self.timezoneOffset = Time.TimezoneOffset(seconds: timezoneOffsetSeconds)
+        }
+
+        /// Seconds since Unix epoch (computed property for compatibility)
+        public var secondsSinceEpoch: Int {
+            time.secondsSinceEpoch
+        }
+
+        /// Timezone offset in seconds (computed property for compatibility)
+        public var timezoneOffsetSeconds: Int {
+            timezoneOffset.seconds
         }
     }
 }
@@ -99,9 +108,30 @@ extension RFC_5322.DateTime {
         second: Int = 0,
         timezoneOffsetSeconds: Int = 0
     ) throws {
+        // Create Time with validation (Time.init throws on invalid components)
+        let time = try Time(
+            year: year,
+            month: month,
+            day: day,
+            hour: hour,
+            minute: minute,
+            second: second
+        )
+
+        // Convert Time.Weekday to weekday number (0=Sunday)
+        let weekdayNumber: Int
+        switch time.weekday {
+        case .sunday: weekdayNumber = 0
+        case .monday: weekdayNumber = 1
+        case .tuesday: weekdayNumber = 2
+        case .wednesday: weekdayNumber = 3
+        case .thursday: weekdayNumber = 4
+        case .friday: weekdayNumber = 5
+        case .saturday: weekdayNumber = 6
+        }
+
         // Validate all components by attempting to create Components
         // This provides consistent validation logic
-        let weekday = Self.weekday(year: year, month: month, day: day)
         _ = try RFC_5322.Date.Components(
             year: year,
             month: month,
@@ -109,20 +139,10 @@ extension RFC_5322.DateTime {
             hour: hour,
             minute: minute,
             second: second,
-            weekday: weekday
+            weekday: weekdayNumber
         )
 
-        // Calculate days since epoch
-        let daysSinceEpoch = Self.daysSinceEpoch(year: year, month: month, day: day)
-
-        // Calculate total seconds (as UTC)
-        let totalSeconds =
-            daysSinceEpoch * TimeConstants.secondsPerDay +
-            hour * TimeConstants.secondsPerHour +
-            minute * TimeConstants.secondsPerMinute +
-            second
-
-        self.init(secondsSinceEpoch: totalSeconds, timezoneOffsetSeconds: timezoneOffsetSeconds)
+        self.init(time: time, timezoneOffset: Time.TimezoneOffset(seconds: timezoneOffsetSeconds))
     }
 }
 
@@ -132,42 +152,30 @@ extension RFC_5322.DateTime {
     /// Extract date components from date-time, adjusted for timezone offset
     public var components: RFC_5322.Date.Components {
         // Apply timezone offset to get local time
-        let totalSeconds = secondsSinceEpoch + timezoneOffsetSeconds
-        let totalDays = totalSeconds / TimeConstants.secondsPerDay
-        let secondsInDay = totalSeconds % TimeConstants.secondsPerDay
+        let localTime = Time(secondsSinceEpoch: secondsSinceEpoch + timezoneOffsetSeconds)
 
-        let hour = secondsInDay / TimeConstants.secondsPerHour
-        let minute = (secondsInDay % TimeConstants.secondsPerHour) / TimeConstants.secondsPerMinute
-        let second = secondsInDay % TimeConstants.secondsPerMinute
-
-        // Calculate year, month, day from days since epoch
-        // Optimized O(1) year calculation instead of O(n) loop
-        let (year, remainingDays) = Self.yearAndDays(fromDaysSinceEpoch: totalDays)
-
-        // Calculate month and day
-        let daysInMonths = Self.daysInMonths(year: year)
-        var month = 1
-        var daysInCurrentMonth = remainingDays
-        for daysInMonth in daysInMonths {
-            if daysInCurrentMonth < daysInMonth {
-                break
-            }
-            daysInCurrentMonth -= daysInMonth
-            month += 1
+        // Convert Time.Weekday to weekday number (0=Sunday)
+        let weekdayNumber: Int
+        switch localTime.weekday {
+        case .sunday: weekdayNumber = 0
+        case .monday: weekdayNumber = 1
+        case .tuesday: weekdayNumber = 2
+        case .wednesday: weekdayNumber = 3
+        case .thursday: weekdayNumber = 4
+        case .friday: weekdayNumber = 5
+        case .saturday: weekdayNumber = 6
         }
-
-        let day = daysInCurrentMonth + 1
 
         // Components calculated from valid epoch seconds are always valid
         // Use unchecked initializer to bypass validation in hot path
         return RFC_5322.Date.Components(
-            uncheckedYear: year,
-            month: month,
-            day: day,
-            hour: hour,
-            minute: minute,
-            second: second,
-            weekday: Self.weekday(year: year, month: month, day: day)
+            uncheckedYear: localTime.year.value,
+            month: localTime.month.value,
+            day: localTime.day.value,
+            hour: localTime.hour.value,
+            minute: localTime.minute.value,
+            second: localTime.second.value,
+            weekday: weekdayNumber
         )
     }
 }
@@ -219,8 +227,8 @@ extension RFC_5322.DateTime {
 
             // Format timezone offset
             let offsetSign = value.timezoneOffsetSeconds >= 0 ? "+" : "-"
-            let offsetHours = abs(value.timezoneOffsetSeconds) / TimeConstants.secondsPerHour
-            let offsetMinutes = (abs(value.timezoneOffsetSeconds) % TimeConstants.secondsPerHour) / TimeConstants.secondsPerMinute
+            let offsetHours = abs(value.timezoneOffsetSeconds) / Time.Calendar.Gregorian.TimeConstants.secondsPerHour
+            let offsetMinutes = (abs(value.timezoneOffsetSeconds) % Time.Calendar.Gregorian.TimeConstants.secondsPerHour) / Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
             let timezone = "\(offsetSign)\(formatTwoDigits(offsetHours))\(formatTwoDigits(offsetMinutes))"
 
             return "\(dayName), \(day) \(monthName) \(year) \(hour):\(minute):\(second) \(timezone)"
@@ -244,15 +252,30 @@ extension RFC_5322.DateTime {
     }
 }
 
-// MARK: - Formatting Protocol (Delegates to Formatter)
+// MARK: - Swift-Native Formatting
 
-extension RFC_5322.DateTime: Formatting {
+extension RFC_5322.DateTime {
+    /// Formats this date-time as an RFC 5322 date-time string
+    ///
+    /// This method provides a Swift-native formatting interface without protocol dependencies.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let dt = try RFC_5322.DateTime(year: 2024, month: 1, day: 1)
+    /// let formatted = dt.formatted()  // "Mon, 01 Jan 2024 00:00:00 +0000"
+    /// ```
+    public func formatted() -> String {
+        Formatter.format(self)
+    }
+
     /// Formats a date-time as RFC 5322 date-time string
-    /// Delegates to RFC_5322.DateTime.Formatter for separation of concerns
+    /// Legacy method for protocol compatibility
     public func format(_ value: Self) -> String {
         Formatter.format(value)
     }
 }
+
 // MARK: - DateTime Parser (Separated parsing logic)
 
 extension RFC_5322.DateTime {
@@ -379,16 +402,31 @@ extension RFC_5322.DateTime {
     }
 }
 
-// MARK: - Parsing Protocol (Delegates to Parser)
+// MARK: - Swift-Native Parsing
 
-extension RFC_5322.DateTime: Format.Parsing {
+extension RFC_5322.DateTime {
+    /// Creates a date-time by parsing an RFC 5322 date-time string
+    ///
+    /// This initializer provides a Swift-native parsing interface without protocol dependencies.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let dt = try RFC_5322.DateTime(parsing: "Mon, 01 Jan 2024 12:00:00 +0000")
+    /// ```
+    ///
+    /// - Parameter string: The RFC 5322 date-time string to parse
+    /// - Throws: `RFC_5322.Date.Error` if parsing fails
+    public init(parsing string: String) throws {
+        self = try Parser.parse(string)
+    }
+
     /// Parse RFC 5322 date-time string
-    /// Delegates to RFC_5322.DateTime.Parser for separation of concerns
+    /// Legacy method for protocol compatibility
     public func parse(_ value: String) throws -> Self {
         try Parser.parse(value)
     }
 }
-
 
 // MARK: - Compositional Operations (Swifty monoid/functor-like behavior)
 
@@ -507,126 +545,6 @@ extension RFC_5322.DateTime {
     }
 }
 
-// MARK: - Private Helpers
-
-extension RFC_5322.DateTime {
-    private static func isLeapYear(_ year: Int) -> Bool {
-        (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
-    }
-
-    // Cached arrays to avoid allocation on every call
-    private static let daysInCommonYearMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    private static let daysInLeapYearMonths = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-
-    private static func daysInMonths(year: Int) -> [Int] {
-        isLeapYear(year) ? daysInLeapYearMonths : daysInCommonYearMonths
-    }
-
-    /// Optimized O(1) calculation of year and remaining days from days since epoch
-    /// Uses pure arithmetic based on Gregorian calendar structure
-    private static func yearAndDays(fromDaysSinceEpoch days: Int) -> (year: Int, remainingDays: Int) {
-        // Gregorian calendar has a 400-year cycle with exactly 146097 days
-        // This cycle contains: 97 leap years and 303 common years
-        let cyclesOf400 = days / 146097
-        var remainingDays = days % 146097
-
-        // Within each 400-year cycle, 100-year periods vary:
-        // - First 3 periods: 36524 days each (24 leap years, 76 common years)
-        // - Last period: 36525 days (25 leap years because year x400 is always a leap year)
-        // However, since 1970 is 30 years into a cycle, we need special handling
-
-        // For epoch 1970, we're 30 years into the 1600-2000 cycle
-        // So the relevant centuries starting from 1970 are: 2000, 2100, 2200, 2300...
-        // 2000 is divisible by 400 (leap year), so 1970-2069 has 25 leap years = 36525 days
-        // 2100, 2200, 2300 are not divisible by 400, so they have 24 leap years = 36524 days each
-
-        var cyclesOf100: Int
-        if remainingDays >= 36525 {  // First century (1970-2070) includes year 2000
-            cyclesOf100 = 1
-            remainingDays -= 36525
-            // Add remaining centuries (each 36524 days)
-            let additionalCenturies = min(remainingDays / 36524, 2)  // Max 2 more (to stay within 400-year cycle)
-            cyclesOf100 += additionalCenturies
-            remainingDays -= additionalCenturies * 36524
-        } else {
-            cyclesOf100 = 0
-        }
-
-        // Within each 100-year period, 4-year periods have 1461 days
-        // (1 leap year, 3 common years)
-        // We use min(_, 24) to stay within the 100-year boundary
-        let cyclesOf4 = min(remainingDays / 1461, 24)
-        remainingDays -= cyclesOf4 * 1461
-
-        // Handle remaining 0-3 years, accounting for possible leap year
-        var year = 1970 + cyclesOf400 * 400 + cyclesOf100 * 100 + cyclesOf4 * 4
-
-        // Process up to 3 remaining years
-        for _ in 0..<3 {
-            let daysInYear = isLeapYear(year) ? 366 : 365
-            if remainingDays < daysInYear {
-                break
-            }
-            remainingDays -= daysInYear
-            year += 1
-        }
-
-        return (year, remainingDays)
-    }
-
-    private static func daysSinceEpoch(year: Int, month: Int, day: Int) -> Int {
-        // Optimized calculation avoiding year-by-year iteration
-        let yearsSince1970 = year - 1970
-
-        // Calculate leap years between 1970 and year (exclusive)
-        // Count years divisible by 4, subtract those divisible by 100, add back those divisible by 400
-        let leapYears: Int
-        if yearsSince1970 > 0 {
-            let yearBefore = year - 1
-            leapYears = (yearBefore / 4 - 1970 / 4) -
-                        (yearBefore / 100 - 1970 / 100) +
-                        (yearBefore / 400 - 1970 / 400)
-        } else {
-            leapYears = 0
-        }
-
-        var days = yearsSince1970 * TimeConstants.daysPerCommonYear + leapYears
-
-        // Add days for complete months in current year
-        let monthDays = daysInMonths(year: year)
-        for m in 0..<(month - 1) {
-            days += monthDays[m]
-        }
-
-        // Add remaining days
-        days += day - 1
-
-        return days
-    }
-
-    /// Calculate day of week (0 = Sunday, 6 = Saturday)
-    /// Using Zeller's congruence algorithm
-    private static func weekday(year: Int, month: Int, day: Int) -> Int {
-        var y = year
-        var m = month
-
-        if m < 3 {
-            m += 12
-            y -= 1
-        }
-
-        let q = day
-        let K = y % 100
-        let J = y / 100
-
-        let h = (q + ((13 * (m + 1)) / 5) + K + (K / 4) + (J / 4) - (2 * J)) % 7
-
-        // Convert from Zeller's (0=Saturday) to our (0=Sunday)
-        return (h + 6) % 7
-    }
-}
-
-
 // MARK: - Codable
 
 extension RFC_5322.DateTime: Codable {
@@ -653,6 +571,6 @@ extension RFC_5322.DateTime: Codable {
 
 extension RFC_5322.DateTime: CustomStringConvertible {
     public var description: String {
-        format(self)
+        formatted()
     }
 }

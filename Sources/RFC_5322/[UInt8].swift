@@ -22,8 +22,6 @@ private extension [UInt8] {
     static let comma: [UInt8] = .init(utf8: ", ")
 }
 
-
-
 // MARK: - EmailAddress
 
 extension [UInt8] {
