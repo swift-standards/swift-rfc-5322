@@ -40,9 +40,9 @@ let package = Package(
         .target(
             name: .rfc5322,
             dependencies: [
-                .rfc1123,
                 .standards,
                 .time,
+                .rfc1123,
                 .incits_4_1986
             ]
         ),
