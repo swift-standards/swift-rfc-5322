@@ -125,8 +125,8 @@ struct `RFC_5322.DateTime Tests` {
         #expect(formatted.contains(":"))
     }
 
-    @Test("Format includes day name")
-    func formatIncludesDayName() throws {
+    @Test
+    func `Format includes day name`() throws {
         let dateTime = try RFC_5322.DateTime(
             year: 2024,
             month: 1,
@@ -137,8 +137,8 @@ struct `RFC_5322.DateTime Tests` {
         #expect(formatted.hasPrefix("Mon,"))
     }
 
-    @Test("Format includes timezone offset")
-    func formatIncludesTimezone() throws {
+    @Test
+    func `Format includes timezone offset`() throws {
         let dateTime = try RFC_5322.DateTime(
             year: 2024,
             month: 1,
@@ -150,8 +150,8 @@ struct `RFC_5322.DateTime Tests` {
         #expect(formatted.contains("+0100"))
     }
 
-    @Test("Format negative timezone offset")
-    func formatNegativeTimezone() throws {
+    @Test
+    func `Format negative timezone offset`() throws {
         let dateTime = try RFC_5322.DateTime(
             year: 2024,
             month: 1,
@@ -163,8 +163,8 @@ struct `RFC_5322.DateTime Tests` {
         #expect(formatted.contains("-0500"))
     }
 
-    @Test("Format zero-pads single digit values")
-    func formatZeroPadding() throws {
+    @Test
+    func `Format zero-pads single digit values`() throws {
         let dateTime = try RFC_5322.DateTime(
             year: 2024,
             month: 1,  // Should be "01"
@@ -181,8 +181,8 @@ struct `RFC_5322.DateTime Tests` {
 
     // MARK: - Parsing
 
-    @Test("Parse RFC 5322 datetime string")
-    func parseDatetimeString() throws {
+    @Test
+    func `Parse RFC 5322 datetime string`() throws {
         let parser = RFC_5322.DateTime(secondsSinceEpoch: 0)
         let dateTime = try parser.parse("Fri, 01 Jan 2021 12:00:00 +0000")
 
@@ -195,24 +195,24 @@ struct `RFC_5322.DateTime Tests` {
         #expect(components.second == 0)
     }
 
-    @Test("Parse datetime with timezone offset")
-    func parseDatetimeWithTimezone() throws {
+    @Test
+    func `Parse datetime with timezone offset`() throws {
         let parser = RFC_5322.DateTime(secondsSinceEpoch: 0)
         let dateTime = try parser.parse("Mon, 15 Jan 2024 14:30:00 +0500")
 
         #expect(dateTime.timezoneOffsetSeconds == 18000)  // 5 hours = 18000 seconds
     }
 
-    @Test("Parse datetime with negative timezone")
-    func parseDatetimeWithNegativeTimezone() throws {
+    @Test
+    func `Parse datetime with negative timezone`() throws {
         let parser = RFC_5322.DateTime(secondsSinceEpoch: 0)
         let dateTime = try parser.parse("Mon, 15 Jan 2024 14:30:00 -0800")
 
         #expect(dateTime.timezoneOffsetSeconds == -28800)  // -8 hours
     }
 
-    @Test("Parse datetime validates weekday")
-    func parseDatetimeValidatesWeekday() throws {
+    @Test
+    func `Parse datetime validates weekday`() throws {
         let parser = RFC_5322.DateTime(secondsSinceEpoch: 0)
 
         // January 1, 2021 is a Friday
@@ -223,8 +223,8 @@ struct `RFC_5322.DateTime Tests` {
 
     // MARK: - Leap Years
 
-    @Test("Handle leap year February 29")
-    func handleLeapYearDate() throws {
+    @Test
+    func `Handle leap year February 29`() throws {
         let dateTime = try RFC_5322.DateTime(
             year: 2024,  // Leap year
             month: 2,
@@ -237,8 +237,8 @@ struct `RFC_5322.DateTime Tests` {
         #expect(components.day == 29)
     }
 
-    @Test("Non-leap year February 28")
-    func handleNonLeapYearDate() throws {
+    @Test
+    func `Non-leap year February 28`() throws {
         let dateTime = try RFC_5322.DateTime(
             year: 2023,  // Not a leap year
             month: 2,
@@ -253,8 +253,8 @@ struct `RFC_5322.DateTime Tests` {
 
     // MARK: - Comparison
 
-    @Test("Compare datetimes")
-    func compareDatetimes() throws {
+    @Test
+    func `Compare datetimes`() throws {
         let earlier = RFC_5322.DateTime(secondsSinceEpoch: 1000)
         let later = RFC_5322.DateTime(secondsSinceEpoch: 2000)
 
@@ -262,8 +262,8 @@ struct `RFC_5322.DateTime Tests` {
         #expect(later > earlier)
     }
 
-    @Test("Equal datetimes")
-    func equalDatetimes() throws {
+    @Test
+    func `Equal datetimes`() throws {
         let dateTime1 = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
         let dateTime2 = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
 

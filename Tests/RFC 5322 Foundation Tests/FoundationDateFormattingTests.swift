@@ -10,11 +10,11 @@ import RFC_5322
 import RFC_5322_Foundation
 import Testing
 
-@Suite("Foundation Date Formatting")
-struct FoundationDateFormattingTests {
+@Suite
+struct `Foundation Date Formatting` {
 
-    @Test("Format Foundation.Date as RFC 5322")
-    func formatFoundationDate() throws {
+    @Test
+    func `Format Foundation.Date as RFC 5322`() throws {
         // January 1, 2021 00:00:00 UTC
         let date = Date(timeIntervalSince1970: 1609459200)
 
@@ -28,8 +28,8 @@ struct FoundationDateFormattingTests {
         #expect(formatted.contains("+0000")) // UTC timezone
     }
 
-    @Test("Format Foundation.Date with custom timezone")
-    func formatWithTimezone() throws {
+    @Test
+    func `Format Foundation.Date with custom timezone`() throws {
         // January 1, 2021 00:00:00 UTC
         let date = Date(timeIntervalSince1970: 1609459200)
 
@@ -43,27 +43,27 @@ struct FoundationDateFormattingTests {
         #expect(formatted.contains("-0500")) // EST timezone
     }
 
-    @Test("Parse RFC 5322 string to Foundation.Date")
-    func parseToFoundationDate() throws {
+    @Test
+    func `Parse RFC 5322 string to Foundation.Date`() throws {
         let parsed = try Date("Fri, 01 Jan 2021 00:00:00 +0000", strategy: .rfc5322)
 
         #expect(parsed.timeIntervalSince1970 == 1609459200)
     }
 }
 
-@Suite("RFC 5322 DateTime with Foundation Formatting")
-struct RFC5322DateTimeFoundationFormattingTests {
+@Suite
+struct `RFC 5322 DateTime with Foundation Formatting` {
 
-    @Test("Convert RFC 5322 DateTime to Foundation.Date")
-    func convertToFoundationDate() throws {
+    @Test
+    func `Convert RFC 5322 DateTime to Foundation.Date`() throws {
         let dt = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
         let foundationDate = dt.foundationDate
 
         #expect(foundationDate.timeIntervalSince1970 == 1609459200)
     }
 
-    @Test("Convert Foundation.Date to RFC 5322 DateTime")
-    func convertFromFoundationDate() throws {
+    @Test
+    func `Convert Foundation.Date to RFC 5322 DateTime`() throws {
         let date = Date(timeIntervalSince1970: 1609459200)
         let dt = RFC_5322.DateTime(foundationDate: date)
 
@@ -71,8 +71,8 @@ struct RFC5322DateTimeFoundationFormattingTests {
         #expect(dt.timezoneOffsetSeconds == 0)
     }
 
-    @Test("Convert with custom timezone")
-    func convertWithTimezone() throws {
+    @Test
+    func `Convert with custom timezone`() throws {
         let date = Date(timeIntervalSince1970: 1609459200)
         let dt = RFC_5322.DateTime(foundationDate: date, timezoneOffsetSeconds: -18000)
 
@@ -80,8 +80,8 @@ struct RFC5322DateTimeFoundationFormattingTests {
         #expect(dt.timezoneOffsetSeconds == -18000)
     }
 
-    @Test("Format RFC 5322 DateTime using ISO 8601")
-    func formatAsISO8601() throws {
+    @Test
+    func `Format RFC 5322 DateTime using ISO 8601`() throws {
         let dt = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
         let formatted = dt.formatted(Date.ISO8601FormatStyle())
 
@@ -92,8 +92,8 @@ struct RFC5322DateTimeFoundationFormattingTests {
     }
 
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
-    @Test("Format RFC 5322 DateTime with date and time styles")
-    func formatWithDateTimeStyles() throws {
+    @Test
+    func `Format RFC 5322 DateTime with date and time styles`() throws {
         let dt = try RFC_5322.DateTime(year: 2024, month: 1, day: 15, hour: 14, minute: 30)
 
         // Numeric date, standard time
@@ -105,8 +105,8 @@ struct RFC5322DateTimeFoundationFormattingTests {
     }
 
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
-    @Test("Format RFC 5322 DateTime with long date style")
-    func formatLongDate() throws {
+    @Test
+    func `Format RFC 5322 DateTime with long date style`() throws {
         let dt = try RFC_5322.DateTime(year: 2024, month: 6, day: 15)
 
         let formatted = dt.formatted(date: .long, time: .omitted)
@@ -117,8 +117,8 @@ struct RFC5322DateTimeFoundationFormattingTests {
     }
 
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
-    @Test("Format RFC 5322 DateTime with custom FormatStyle")
-    func formatWithCustomStyle() throws {
+    @Test
+    func `Format RFC 5322 DateTime with custom FormatStyle`() throws {
         let dt = try RFC_5322.DateTime(year: 2024, month: 3, day: 21, hour: 15, minute: 45)
 
         let formatted = dt.formatted(
