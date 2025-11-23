@@ -4,8 +4,8 @@
 // RFC 5322 date-time representation and formatting
 // Format: "Mon, 01 Jan 2024 12:34:56 +0000"
 
-public import Standards
-public import Time
+import Standards
+public import StandardTime
 
 extension RFC_5322 {
 
@@ -196,35 +196,19 @@ extension RFC_5322.DateTime {
             let monthName = RFC_5322.DateTime.monthNames[components.month - 1]
 
             // Manually format numbers with zero-padding to avoid formatter overhead
-            let day = formatTwoDigits(components.day)
-            let year = formatFourDigits(components.year)
-            let hour = formatTwoDigits(components.hour)
-            let minute = formatTwoDigits(components.minute)
-            let second = formatTwoDigits(components.second)
+            let day = components.day.zeroPaddedTwoDigits()
+            let year = components.year.zeroPaddedFourDigits()
+            let hour = components.hour.zeroPaddedTwoDigits()
+            let minute = components.minute.zeroPaddedTwoDigits()
+            let second = components.second.zeroPaddedTwoDigits()
 
             // Format timezone offset
             let offsetSign = value.timezoneOffsetSeconds >= 0 ? "+" : "-"
             let offsetHours = abs(value.timezoneOffsetSeconds) / Time.Calendar.Gregorian.TimeConstants.secondsPerHour
             let offsetMinutes = (abs(value.timezoneOffsetSeconds) % Time.Calendar.Gregorian.TimeConstants.secondsPerHour) / Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
-            let timezone = "\(offsetSign)\(formatTwoDigits(offsetHours))\(formatTwoDigits(offsetMinutes))"
+            let timezone = "\(offsetSign)\(offsetHours.zeroPaddedTwoDigits())\(offsetMinutes.zeroPaddedTwoDigits())"
 
             return "\(dayName), \(day) \(monthName) \(year) \(hour):\(minute):\(second) \(timezone)"
-        }
-
-        /// Fast two-digit zero-padded formatting (00-99)
-        private static func formatTwoDigits(_ value: Int) -> String {
-            let tens = value / 10
-            let ones = value % 10
-            return "\(tens)\(ones)"
-        }
-
-        /// Fast four-digit zero-padded formatting (0000-9999)
-        private static func formatFourDigits(_ value: Int) -> String {
-            let thousands = value / 1000
-            let hundreds = (value % 1000) / 100
-            let tens = (value % 100) / 10
-            let ones = value % 10
-            return "\(thousands)\(hundreds)\(tens)\(ones)"
         }
     }
 }
@@ -274,7 +258,7 @@ extension RFC_5322.DateTime {
         /// - Parameter value: The RFC 5322 date-time string
         /// - Returns: DateTime
         /// - Throws: RFC_5322.Date.Error if parsing fails
-        public static func parse(_ value: String) throws -> RFC_5322.DateTime {
+        public static func parse(_ value: some StringProtocol) throws -> RFC_5322.DateTime {
         // Split into components
         let parts = value.split(separator: " ").map(String.init)
 
@@ -397,13 +381,13 @@ extension RFC_5322.DateTime {
     ///
     /// - Parameter string: The RFC 5322 date-time string to parse
     /// - Throws: `RFC_5322.Date.Error` if parsing fails
-    public init(parsing string: String) throws {
+    public init(parsing string: some StringProtocol) throws {
         self = try Parser.parse(string)
     }
 
     /// Parse RFC 5322 date-time string
     /// Legacy method for protocol compatibility
-    public func parse(_ value: String) throws -> Self {
+    public func parse(_ value: some StringProtocol) throws -> Self {
         try Parser.parse(value)
     }
 }

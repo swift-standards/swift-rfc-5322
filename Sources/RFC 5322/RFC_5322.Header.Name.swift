@@ -54,10 +54,10 @@ extension RFC_5322.Header {
         /// Creates a header name
         ///
         /// - Parameter rawValue: The header field name (case-insensitive)
-        public init(_ rawValue: String) {
+        public init(_ rawValue: some StringProtocol) {
             // Header names are case-insensitive, but we preserve original case
             // for display purposes while using case-insensitive comparison
-            self.rawValue = rawValue
+            self.rawValue = String(rawValue)
         }
 
         /// Hash value (case-insensitive)
@@ -95,28 +95,28 @@ extension RFC_5322.Header.Name {
     /// let valid = try RFC_5322.Header.Name(validating: "X-Custom-Header")
     /// let invalid = try RFC_5322.Header.Name(validating: "X:Bad")  // Throws
     /// ```
-    public init(validating value: String) throws {
+    public init(validating value: some StringProtocol) throws {
         // Empty check
         guard !value.isEmpty else {
-            throw RFC_5322.Error.invalidFieldName(value, reason: "Field name cannot be empty")
+            throw RFC_5322.Error.invalidFieldName(String(value), reason: "Field name cannot be empty")
         }
 
         // Validate characters: printable ASCII except colon
         // ftext = %d33-57 / %d59-126
-        // Using INCITS_4_1986: isASCIIVisible (0x21-0x7E) excludes colon (0x3A)
+        // Using INCITS_4_1986: .ascii.isVisible (0x21-0x7E) excludes colon (0x3A)
         for char in value {
             guard let ascii = char.asciiValue else {
                 throw RFC_5322.Error.invalidFieldName(
-                    value,
+                    String(value),
                     reason: "Field name must contain only ASCII characters"
                 )
             }
 
             // Must be visible ASCII (0x21-0x7E) but not colon (0x3A/58)
-            guard ascii.isASCIIVisible && ascii != .colon else {
-                let charDesc = ascii == .colon ? "colon" : "'\(char)'"
+            guard ascii.ascii.isVisible && ascii != .ascii.colon else {
+                let charDesc = ascii == .ascii.colon ? "colon" : "'\(char)'"
                 throw RFC_5322.Error.invalidFieldName(
-                    value,
+                    String(value),
                     reason: "Field name contains invalid character \(charDesc) (ASCII \(ascii)). Must be printable ASCII except colon."
                 )
             }
@@ -231,7 +231,7 @@ extension RFC_5322.Header.Name: ExpressibleByStringLiteral {
     /// Creates a header name from a string literal
     ///
     /// Allows convenient syntax: `let header: Header.Name = "X-Custom"`
-    public init(stringLiteral value: String) {
+    public init(stringLiteral value: some StringProtocol) {
         self.init(value)
     }
 }

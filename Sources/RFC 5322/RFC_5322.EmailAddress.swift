@@ -23,13 +23,13 @@ extension RFC_5322 {
 
         /// Initialize with components
         public init(displayName: String? = nil, localPart: LocalPart, domain: RFC_1123.Domain) {
-            self.displayName = displayName?.trimming(.whitespaces)
+            self.displayName = displayName?.trimming(.ascii.whitespaces)
             self.localPart = localPart
             self.domain = domain
         }
 
         /// Initialize from string representation ("Name <local@domain>" or "local@domain")
-        public init(_ string: String) throws {
+        public init(_ string: some StringProtocol) throws {
             // Define regex components using Regex builder for more robust parsing
             let displayNameCapture = /((?:\"(?:(?:\\[\"\\])|[^\"\\])+\"|[^<]+?))\s*/
 
@@ -63,7 +63,7 @@ extension RFC_5322 {
             // Try matching the full address format first (with angle brackets)
             if let match = try? fullRegex.wholeMatch(in: string) {
                 let displayName = match.output.1.map { name in
-                    let trimmedName = name.trimming(.whitespaces)
+                    let trimmedName = name.trimming(.ascii.whitespaces)
                     if trimmedName.hasPrefix("\"") && trimmedName.hasSuffix("\"") {
                         // For quoted strings, we need to:
                         // 1. Remove the outer quotes
@@ -109,9 +109,9 @@ extension RFC_5322.EmailAddress {
         private let storage: Storage
 
         /// Initialize with a string
-        public init(_ string: String) throws {
+        public init(_ string: some StringProtocol) throws {
             // RFC 5322 is ASCII-only - validate before processing
-            guard string.asciiBytes != nil else {
+            guard [UInt8].ascii(string) != nil else {
                 throw ValidationError.nonASCIICharacters
             }
 

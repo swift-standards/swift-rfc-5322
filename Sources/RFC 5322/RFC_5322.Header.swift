@@ -39,9 +39,9 @@ extension RFC_5322 {
         /// - Parameters:
         ///   - name: The header field name
         ///   - value: The header field value
-        public init(name: Header.Name, value: String) {
+        public init(name: Header.Name, value: some StringProtocol) {
             self.name = name
-            self.value = value
+            self.value = String(value)
         }
     }
 }
