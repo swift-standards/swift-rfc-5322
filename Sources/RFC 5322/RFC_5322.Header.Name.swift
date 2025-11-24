@@ -54,10 +54,10 @@ extension RFC_5322.Header {
         /// Creates a header name
         ///
         /// - Parameter rawValue: The header field name (case-insensitive)
-        public init(_ rawValue: some StringProtocol) {
+        public init(_ rawValue: String) {
             // Header names are case-insensitive, but we preserve original case
             // for display purposes while using case-insensitive comparison
-            self.rawValue = String(rawValue)
+            self.rawValue = rawValue
         }
 
         /// Hash value (case-insensitive)
@@ -72,15 +72,79 @@ extension RFC_5322.Header {
     }
 }
 
+
+
+// MARK: - Header.Name Parsing
+
+extension RFC_5322.Header.Name {
+    /// Parses a header name from canonical byte representation (CANONICAL PRIMITIVE)
+    ///
+    /// This is the primitive parser that works at the byte level.
+    /// RFC 5322 header names are ASCII-only.
+    ///
+    /// ## Category Theory
+    ///
+    /// This is the fundamental parsing transformation:
+    /// - **Domain**: [UInt8] (ASCII bytes)
+    /// - **Codomain**: RFC_5322.Header.Name (structured data)
+    ///
+    /// String-based parsing is derived as composition:
+    /// ```
+    /// String → [UInt8] (UTF-8 bytes) → Header.Name
+    /// ```
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let bytes = Array("Content-Type".utf8)
+    /// let name = try RFC_5322.Header.Name(ascii: bytes)
+    /// ```
+    ///
+    /// - Parameter bytes: The ASCII byte representation of the header name
+    /// - Throws: `RFC_5322.Header.Name.Error` if the bytes are malformed
+    public init(ascii bytes: [UInt8]) throws(Error) {
+        // Empty check
+        guard !bytes.isEmpty else {
+            throw Error.empty
+        }
+
+        // Validate characters: printable ASCII except colon
+        // ftext = %d33-57 / %d59-126
+        // Using INCITS_4_1986: .ascii.isVisible (0x21-0x7E) excludes colon (0x3A)
+        for byte in bytes {
+            // Must be visible ASCII (0x21-0x7E) but not colon (0x3A/58)
+            guard byte.ascii.isVisible && byte != .ascii.colon else {
+                let string = String(decoding: bytes, as: UTF8.self)
+                let reason = byte == .ascii.colon
+                    ? "Field name cannot contain colon"
+                    : "Must be printable ASCII except colon"
+                throw Error.invalidCharacter(string, byte: byte, reason: reason)
+            }
+        }
+
+        // Store the validated string
+        let string = String(decoding: bytes, as: UTF8.self)
+        self.init(string)
+    }
+}
+
 // MARK: - Validation
 
 extension RFC_5322.Header.Name {
     /// Creates a validated header field name
     ///
+    /// Composes through canonical byte representation for academic correctness.
     /// Validates the field name against RFC 5322 Section 3.6.8 grammar.
     ///
     /// - Parameter value: Field name to validate
     /// - Throws: `RFC_5322.Error.invalidFieldName` if invalid
+    ///
+    /// ## Category Theory
+    ///
+    /// Parsing composes as:
+    /// ```
+    /// String → [UInt8] (UTF-8) → Header.Name
+    /// ```
     ///
     /// ## RFC 5322 Section 3.6.8 Grammar
     ///
@@ -95,34 +159,28 @@ extension RFC_5322.Header.Name {
     /// let valid = try RFC_5322.Header.Name(validating: "X-Custom-Header")
     /// let invalid = try RFC_5322.Header.Name(validating: "X:Bad")  // Throws
     /// ```
-    public init(validating value: some StringProtocol) throws {
-        // Empty check
-        guard !value.isEmpty else {
-            throw RFC_5322.Error.invalidFieldName(String(value), reason: "Field name cannot be empty")
-        }
+    public init(_ value: some StringProtocol) throws(Error) {
+        // Convert to canonical byte representation (UTF-8, which is ASCII-compatible)
+        let bytes = Array(value.utf8)
 
-        // Validate characters: printable ASCII except colon
-        // ftext = %d33-57 / %d59-126
-        // Using INCITS_4_1986: .ascii.isVisible (0x21-0x7E) excludes colon (0x3A)
-        for char in value {
-            guard let ascii = char.asciiValue else {
-                throw RFC_5322.Error.invalidFieldName(
-                    String(value),
-                    reason: "Field name must contain only ASCII characters"
-                )
-            }
+        // Delegate to primitive byte-level parser
+        try self.init(ascii: bytes)
+    }
+}
 
-            // Must be visible ASCII (0x21-0x7E) but not colon (0x3A/58)
-            guard ascii.ascii.isVisible && ascii != .ascii.colon else {
-                let charDesc = ascii == .ascii.colon ? "colon" : "'\(char)'"
-                throw RFC_5322.Error.invalidFieldName(
-                    String(value),
-                    reason: "Field name contains invalid character \(charDesc) (ASCII \(ascii)). Must be printable ASCII except colon."
-                )
-            }
-        }
-
-        self.init(value)
+extension StringProtocol {
+    /// String representation of the Message-ID
+    ///
+    /// Composes through canonical byte representation for academic correctness.
+    ///
+    /// ## Category Theory
+    ///
+    /// String display composes as:
+    /// ```
+    /// Message.ID → [UInt8] (ASCII) → String (UTF-8 interpretation)
+    /// ```
+    public init(_ value: RFC_5322.Header.Name) {
+        self = Self(decoding: [UInt8](value), as: UTF8.self)
     }
 }
 
@@ -231,7 +289,7 @@ extension RFC_5322.Header.Name: ExpressibleByStringLiteral {
     /// Creates a header name from a string literal
     ///
     /// Allows convenient syntax: `let header: Header.Name = "X-Custom"`
-    public init(stringLiteral value: some StringProtocol) {
+    public init(stringLiteral value: String) {
         self.init(value)
     }
 }

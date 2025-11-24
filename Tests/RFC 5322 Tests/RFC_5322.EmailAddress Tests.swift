@@ -165,28 +165,28 @@ struct `RFC_5322.EmailAddress Tests` {
 
     @Test
     func `Reject email without @ sign`() throws {
-        #expect(throws: RFC_5322.EmailAddress.ValidationError.self) {
+        #expect(throws: RFC_5322.EmailAddress.Error.self) {
             _ = try RFC_5322.EmailAddress("userexample.com")
         }
     }
 
     @Test
     func `Reject consecutive dots in local-part`() throws {
-        #expect(throws: RFC_5322.EmailAddress.ValidationError.self) {
+        #expect(throws: RFC_5322.EmailAddress.Error.self) {
             _ = try RFC_5322.EmailAddress("user..name@example.com")
         }
     }
 
     @Test
     func `Reject leading dot in local-part`() throws {
-        #expect(throws: RFC_5322.EmailAddress.ValidationError.self) {
+        #expect(throws: RFC_5322.EmailAddress.Error.self) {
             _ = try RFC_5322.EmailAddress(".user@example.com")
         }
     }
 
     @Test
     func `Reject trailing dot in local-part`() throws {
-        #expect(throws: RFC_5322.EmailAddress.ValidationError.self) {
+        #expect(throws: RFC_5322.EmailAddress.Error.self) {
             _ = try RFC_5322.EmailAddress("user.@example.com")
         }
     }
@@ -194,7 +194,7 @@ struct `RFC_5322.EmailAddress Tests` {
     @Test
     func `Reject local-part exceeding 64 characters`() throws {
         let longLocalPart = String(repeating: "a", count: 65)
-        #expect(throws: RFC_5322.EmailAddress.ValidationError.localPartTooLong(65)) {
+        #expect(throws: RFC_5322.EmailAddress.Error.localPart(.tooLong(65))) {
             _ = try RFC_5322.EmailAddress("\(longLocalPart)@example.com")
         }
     }

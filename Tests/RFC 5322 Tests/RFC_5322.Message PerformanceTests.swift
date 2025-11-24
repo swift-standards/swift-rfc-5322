@@ -113,10 +113,10 @@ extension PerformanceTests {
             .timed(iterations: 10000, warmup: 1000, threshold: .microseconds(100)),
             arguments: [try! RFC_5322.EmailAddress("sender@example.com")]
         )
-        func `generate message ID`(from: RFC_5322.EmailAddress) {
-            _ = RFC_5322.Message.generateMessageId(
-                from: from,
-                uniqueId: "test-unique-id-123"
+        func `generate message ID`(from: RFC_5322.EmailAddress) throws {
+            _ = RFC_5322.Message.ID(
+                uniqueId: "test-unique-id-123",
+                domain: from.domain
             )
         }
     }

@@ -278,14 +278,14 @@ struct `RFC_5322.Message Tests` {
     @Test
     func `Generate message ID format`() throws {
         let from = try RFC_5322.EmailAddress("sender@example.com")
-        let messageId = RFC_5322.Message.generateMessageId(
-            from: from,
-            uniqueId: "test-123"
+        let messageId = RFC_5322.Message.ID(
+            uniqueId: "test-123",
+            domain: from.domain
         )
 
         #expect(messageId == "<test-123@example.com>")
-        #expect(messageId.hasPrefix("<"))
-        #expect(messageId.hasSuffix(">"))
-        #expect(messageId.contains("@"))
+        #expect(String(messageId).hasPrefix("<"))
+        #expect(String(messageId).hasSuffix(">"))
+        #expect(String(messageId).contains("@"))
     }
 }

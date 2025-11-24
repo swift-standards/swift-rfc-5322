@@ -90,14 +90,12 @@ extension PerformanceTests {
 
         @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(115)))
         func `parse datetime string`() throws {
-            let parser = RFC_5322.DateTime(secondsSinceEpoch: 0)
-            _ = try parser.parse("Fri, 01 Jan 2021 12:00:00 +0000")
+            _ = try RFC_5322.DateTime("Fri, 01 Jan 2021 12:00:00 +0000")
         }
 
         @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(115)))
         func `parse datetime with timezone offset`() throws {
-            let parser = RFC_5322.DateTime(secondsSinceEpoch: 0)
-            _ = try parser.parse("Mon, 15 Jan 2024 14:30:00 +0500")
+            _ = try RFC_5322.DateTime("Mon, 15 Jan 2024 14:30:00 +0500")
         }
 
         // MARK: - Byte Conversion Performance

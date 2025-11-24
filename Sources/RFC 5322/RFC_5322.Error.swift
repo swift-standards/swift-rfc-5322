@@ -29,7 +29,7 @@ extension RFC_5322 {
         case dateTime(Date.Error)
 
         /// Email address validation errors
-        case emailAddress(EmailAddress.ValidationError)
+        case emailAddress(EmailAddress.Error)
 
         /// Generic parsing error for unspecified format issues
         case invalidFormat(String)
@@ -58,7 +58,7 @@ extension RFC_5322.Date.Error {
     }
 }
 
-extension RFC_5322.EmailAddress.ValidationError {
+extension RFC_5322.EmailAddress.Error {
     /// Convert to unified RFC_5322.Error
     public var unified: RFC_5322.Error {
         .emailAddress(self)

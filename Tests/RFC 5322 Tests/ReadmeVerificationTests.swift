@@ -6,6 +6,7 @@
 //
 
 import RFC_5322
+import Standards
 import Testing
 
 @Suite
@@ -48,9 +49,9 @@ struct `README Verification Tests` {
             to: [try RFC_5322.EmailAddress("jane@example.com")],
             date: RFC_5322.DateTime(secondsSinceEpoch: 1609459200),
             subject: "Hello from Swift!",
-            messageId: RFC_5322.Message.generateMessageId(
-                from: try RFC_5322.EmailAddress("john@example.com"),
-                uniqueId: "test-unique-id"
+            messageId: RFC_5322.Message.ID.init(
+                uniqueId: "test-unique-id",
+                domain: try RFC_5322.EmailAddress("john@example.com").domain,
             ),
             body: Array("Hello, World!".utf8)
         )
@@ -111,9 +112,8 @@ struct `README Verification Tests` {
     @Test
     func `README Line 128-129: Format date`() throws {
         let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
-        let dateString = dateTime.format(dateTime)
-        #expect(!dateString.isEmpty)
+        #expect(!dateTime.description.isEmpty)
         // Should contain day, month, year, time
-        #expect(dateString.contains(","))
+        #expect(dateTime.description.contains(","))
     }
 }

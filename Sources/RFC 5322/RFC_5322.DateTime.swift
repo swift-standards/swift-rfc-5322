@@ -5,12 +5,10 @@
 // Format: "Mon, 01 Jan 2024 12:34:56 +0000"
 
 import Standards
+import INCITS_4_1986
 public import StandardTime
 
 extension RFC_5322 {
-
-    public typealias Date = DateTime
-
     /// RFC 5322 date-time representation
     ///
     /// Represents a date-time value per RFC 5322 section 3.3.
@@ -25,12 +23,12 @@ extension RFC_5322 {
     public struct DateTime: Sendable, Equatable, Hashable, Comparable {
         /// The UTC time
         public let time: Time
-
+        
         /// Timezone offset from UTC
         /// Positive values are east of UTC, negative values are west
         /// Example: +0100 = 1 hour, -0500 = -5 hours
         public let timezoneOffset: Time.TimezoneOffset
-
+        
         /// Create a date-time from Time and timezone offset
         /// - Parameters:
         ///   - time: The UTC time
@@ -39,54 +37,331 @@ extension RFC_5322 {
             self.time = time
             self.timezoneOffset = timezoneOffset
         }
-
-        /// Create a date-time from seconds since epoch
-        /// - Parameters:
-        ///   - secondsSinceEpoch: Seconds since Unix epoch (UTC)
-        ///   - timezoneOffsetSeconds: Timezone offset in seconds (default: 0 for UTC)
-        public init(secondsSinceEpoch: Int, timezoneOffsetSeconds: Int = 0) {
-            self.time = Time(secondsSinceEpoch: secondsSinceEpoch)
-            self.timezoneOffset = Time.TimezoneOffset(seconds: timezoneOffsetSeconds)
-        }
-
-        /// Seconds since Unix epoch (computed property for compatibility)
-        public var secondsSinceEpoch: Int {
-            time.secondsSinceEpoch
-        }
-
-        /// Timezone offset in seconds (computed property for compatibility)
-        public var timezoneOffsetSeconds: Int {
-            timezoneOffset.seconds
-        }
     }
 }
 
-// MARK: - Comparable
+extension RFC_5322 {
+    public typealias Date = RFC_5322.DateTime
+}
 
 extension RFC_5322.DateTime {
-    public static func < (lhs: Self, rhs: Self) -> Bool {
-        lhs.secondsSinceEpoch < rhs.secondsSinceEpoch
+    /// Parses RFC 5322 date-time from canonical byte representation (CANONICAL PRIMITIVE)
+    ///
+    /// This is the primitive parser that works at the byte level.
+    /// RFC 5322 date-times are ASCII-only.
+    ///
+    /// ## Category Theory
+    ///
+    /// This is the fundamental parsing transformation:
+    /// - **Domain**: [UInt8] (ASCII bytes)
+    /// - **Codomain**: RFC_5322.DateTime (structured data)
+    ///
+    /// String-based parsing is derived as composition:
+    /// ```
+    /// String → [UInt8] (UTF-8 bytes) → DateTime
+    /// ```
+    ///
+    /// ## Format
+    ///
+    /// Parses RFC 5322 date-time format: "Mon, 01 Jan 2024 12:34:56 +0000"
+    /// Supports optional seconds: "Mon, 01 Jan 2024 12:34 +0000"
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let bytes = Array("Mon, 01 Jan 2024 12:00:00 +0000".utf8)
+    /// let dateTime = try RFC_5322.DateTime(ascii: bytes)
+    /// ```
+    ///
+    /// - Parameter bytes: The ASCII byte representation of the date-time
+    /// - Throws: `RFC_5322.DateTime.Error` if the bytes are malformed
+    public init(ascii bytes: [UInt8]) throws(Error) {
+        // Split on spaces at byte level
+        var parts: [[UInt8]] = []
+        var currentPart: [UInt8] = []
+
+        for byte in bytes {
+            if byte == .ascii.space {
+                if !currentPart.isEmpty {
+                    parts.append(currentPart)
+                    currentPart = []
+                }
+            } else {
+                currentPart.append(byte)
+            }
+        }
+        if !currentPart.isEmpty {
+            parts.append(currentPart)
+        }
+
+        // Expect at least 6 parts: "Mon," "01" "Jan" "2024" "12:34:56" "+0000"
+        guard parts.count >= 6 else {
+            throw Error.invalidFormat("Expected at least 6 components, got \(parts.count)")
+        }
+
+        // Parse day name (remove trailing comma if present)
+        let dayNameBytes = parts[0].last == .ascii.comma ? parts[0].dropLast() : parts[0][...]
+        let dayName = String(decoding: dayNameBytes, as: UTF8.self)
+
+        guard let expectedWeekday = RFC_5322.DateTime.dayNames.firstIndex(of: dayName) else {
+            throw Error.invalidDayName(dayName)
+        }
+
+        // Parse day (2 digits)
+        let dayString = String(decoding: parts[1], as: UTF8.self)
+        guard let day = Int(dayString), day >= 1, day <= 31 else {
+            throw Error.invalidDay(dayString)
+        }
+
+        // Parse month (3-letter abbreviation)
+        let monthString = String(decoding: parts[2], as: UTF8.self)
+        guard let monthIndex = RFC_5322.DateTime.monthNames.firstIndex(of: monthString) else {
+            throw Error.invalidMonth(monthString)
+        }
+        let month = monthIndex + 1
+
+        // Parse year (4 digits)
+        let yearString = String(decoding: parts[3], as: UTF8.self)
+        guard let year = Int(yearString), year >= 1900 else {
+            throw Error.invalidYear(yearString)
+        }
+
+        // Parse time (HH:MM:SS or HH:MM) at byte level
+        let timeBytes = parts[4]
+        var timeParts: [[UInt8]] = []
+        var currentTimePart: [UInt8] = []
+
+        for byte in timeBytes {
+            if byte == .ascii.colon {
+                if !currentTimePart.isEmpty {
+                    timeParts.append(currentTimePart)
+                    currentTimePart = []
+                }
+            } else {
+                currentTimePart.append(byte)
+            }
+        }
+        if !currentTimePart.isEmpty {
+            timeParts.append(currentTimePart)
+        }
+
+        guard timeParts.count >= 2, timeParts.count <= 3 else {
+            let timeString = String(decoding: timeBytes, as: UTF8.self)
+            throw Error.invalidTime(timeString)
+        }
+
+        let hourString = String(decoding: timeParts[0], as: UTF8.self)
+        guard let hour = Int(hourString), hour >= 0, hour <= 23 else {
+            throw Error.invalidHour(hourString)
+        }
+
+        let minuteString = String(decoding: timeParts[1], as: UTF8.self)
+        guard let minute = Int(minuteString), minute >= 0, minute <= 59 else {
+            throw Error.invalidMinute(minuteString)
+        }
+
+        let second: Int
+        if timeParts.count == 3 {
+            let secondString = String(decoding: timeParts[2], as: UTF8.self)
+            guard let sec = Int(secondString), sec >= 0, sec <= 60 else {  // Allow leap second
+                throw Error.invalidSecond(secondString)
+            }
+            second = sec
+        } else {
+            second = 0
+        }
+
+        // Parse timezone offset at byte level (+0000 or -0500)
+        let timezoneBytes = parts[5]
+        guard timezoneBytes.count == 5 else {
+            let timezoneString = String(decoding: timezoneBytes, as: UTF8.self)
+            throw Error.invalidTimezone(timezoneString)
+        }
+
+        let sign = timezoneBytes[0] == UInt8.ascii.plus ? 1 : -1
+        let offsetBytes = timezoneBytes.dropFirst()
+
+        // Parse hours and minutes from bytes
+        let offsetHoursBytes = offsetBytes.prefix(2)
+        let offsetMinutesBytes = offsetBytes.suffix(2)
+
+        let offsetHoursString = String(decoding: offsetHoursBytes, as: UTF8.self)
+        let offsetMinutesString = String(decoding: offsetMinutesBytes, as: UTF8.self)
+
+        guard let offsetHours = Int(offsetHoursString),
+              let offsetMinutes = Int(offsetMinutesString),
+              offsetHours >= 0, offsetHours <= 23,
+              offsetMinutes >= 0, offsetMinutes <= 59
+        else {
+            let timezoneString = String(decoding: timezoneBytes, as: UTF8.self)
+            throw Error.invalidTimezone(timezoneString)
+        }
+
+        let timezoneOffsetSeconds = sign * (
+            offsetHours * Time.Calendar.Gregorian.TimeConstants.secondsPerHour +
+            offsetMinutes * Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
+        )
+
+        // Create date-time in UTC with validated components
+        // Time.init throws Time.Error, not our typed error, so we use do-catch
+        let dateTime: RFC_5322.DateTime
+        do {
+            dateTime = try RFC_5322.DateTime(
+                year: year,
+                month: month,
+                day: day,
+                hour: hour,
+                minute: minute,
+                second: second
+            )
+        } catch {
+            throw Error.invalidFormat("Date components invalid: \(error)")
+        }
+
+        // Adjust for timezone offset to get UTC
+        // If timezone is +0500, we subtract 5 hours to get UTC
+        let utcDateTime = dateTime.subtracting(timezoneOffsetSeconds)
+
+        // Validate weekday matches (using the local time components)
+        let localDateTime = RFC_5322.DateTime(
+            secondsSinceEpoch: utcDateTime.secondsSinceEpoch,
+            timezoneOffsetSeconds: timezoneOffsetSeconds
+        )
+        let actualWeekday = localDateTime.components.weekday
+        guard actualWeekday == expectedWeekday else {
+            throw Error.weekdayMismatch(
+                expected: RFC_5322.DateTime.dayNames[expectedWeekday],
+                actual: RFC_5322.DateTime.dayNames[actualWeekday]
+            )
+        }
+
+        self = localDateTime
     }
 }
 
-// MARK: - Equatable & Hashable
-
 extension RFC_5322.DateTime {
-    /// Two DateTimes are equal if they represent the same moment in time
-    /// (same secondsSinceEpoch), regardless of timezone offset
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.secondsSinceEpoch == rhs.secondsSinceEpoch
-    }
-
-    /// Hash based on the moment in time, not timezone display
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(secondsSinceEpoch)
+    /// Creates a date-time by parsing an RFC 5322 date-time string
+    ///
+    /// This initializer provides a Swift-native parsing interface without protocol dependencies.
+    ///
+    /// ## Category Theory
+    ///
+    /// Parsing composes through canonical byte representation:
+    /// ```
+    /// String → [UInt8] (UTF-8) → DateTime
+    /// ```
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let dt = try RFC_5322.DateTime(parsing: "Mon, 01 Jan 2024 12:00:00 +0000")
+    /// ```
+    ///
+    /// - Parameter string: The RFC 5322 date-time string to parse
+    /// - Throws: `RFC_5322.DateTime.Error` if parsing fails
+    public init(_ string: some StringProtocol) throws(Error) {
+        try self.init(ascii: Array(string.utf8))
     }
 }
 
-// MARK: - Additional Initializers
+extension [UInt8] {
+    /// Creates RFC 5322 formatted date-time bytes (CANONICAL SERIALIZATION)
+    ///
+    /// This is the canonical byte-level serialization of RFC 5322 date-times.
+    ///
+    /// ## Category Theory
+    ///
+    /// This is the fundamental serialization transformation:
+    /// - **Domain**: RFC_5322.DateTime (structured data)
+    /// - **Codomain**: [UInt8] (ASCII bytes)
+    ///
+    /// String representation is derived as composition:
+    /// ```
+    /// DateTime → [UInt8] (ASCII) → String (UTF-8 interpretation)
+    /// ```
+    ///
+    /// ## Format
+    ///
+    /// Produces RFC 5322 date-time format: "Mon, 01 Jan 2024 12:34:56 +0000"
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let dateTime = try RFC_5322.DateTime(year: 2024, month: 1, day: 1, hour: 12)
+    /// let bytes = [UInt8](dateTime)
+    /// // bytes == "Mon, 01 Jan 2024 12:00:00 +0000" as ASCII bytes
+    /// ```
+    ///
+    /// - Parameter dateTime: The date-time to serialize
+    public init(_ dateTime: RFC_5322.DateTime) {
+        let components = dateTime.components
+
+        var result = [UInt8]()
+        result.reserveCapacity(31) // "Mon, 01 Jan 2024 12:34:56 +0000" = 31 bytes
+
+        // Day name (e.g., "Mon")
+        let dayName = RFC_5322.DateTime.dayNames[components.weekday]
+        result.append(utf8: dayName)
+        result.append(.ascii.comma)
+        result.append(.ascii.space)
+
+        // Day (zero-padded 2 digits)
+        let day = components.day.zeroPaddedTwoDigits()
+        result.append(utf8: day)
+        result.append(.ascii.space)
+
+        // Month name (e.g., "Jan")
+        let monthName = RFC_5322.DateTime.monthNames[components.month - 1]
+        result.append(utf8: monthName)
+        result.append(.ascii.space)
+
+        // Year (4 digits)
+        let year = components.year.zeroPaddedFourDigits()
+        result.append(utf8: year)
+        result.append(.ascii.space)
+
+        // Hour (zero-padded 2 digits)
+        let hour = components.hour.zeroPaddedTwoDigits()
+        result.append(utf8: hour)
+        result.append(.ascii.colon)
+
+        // Minute (zero-padded 2 digits)
+        let minute = components.minute.zeroPaddedTwoDigits()
+        result.append(utf8: minute)
+        result.append(.ascii.colon)
+
+        // Second (zero-padded 2 digits)
+        let second = components.second.zeroPaddedTwoDigits()
+        result.append(utf8: second)
+        result.append(.ascii.space)
+
+        // Timezone offset
+        let offsetSign = dateTime.timezoneOffsetSeconds >= 0 ? "+" : "-"
+        result.append(utf8: offsetSign)
+
+        let offsetHours = abs(dateTime.timezoneOffsetSeconds) / Time.Calendar.Gregorian.TimeConstants.secondsPerHour
+        let offsetMinutes = (abs(dateTime.timezoneOffsetSeconds) % Time.Calendar.Gregorian.TimeConstants.secondsPerHour) / Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
+
+        let offsetHoursStr = offsetHours.zeroPaddedTwoDigits()
+        result.append(utf8: offsetHoursStr)
+
+        let offsetMinutesStr = offsetMinutes.zeroPaddedTwoDigits()
+        result.append(utf8: offsetMinutesStr)
+
+        self = result
+    }
+}
 
 extension RFC_5322.DateTime {
+    /// Create a date-time from seconds since epoch
+    /// - Parameters:
+    ///   - secondsSinceEpoch: Seconds since Unix epoch (UTC)
+    ///   - timezoneOffsetSeconds: Timezone offset in seconds (default: 0 for UTC)
+    public init(secondsSinceEpoch: Int, timezoneOffsetSeconds: Int = 0) {
+        self.time = Time(secondsSinceEpoch: secondsSinceEpoch)
+        self.timezoneOffset = Time.TimezoneOffset(seconds: timezoneOffsetSeconds)
+    }
+    
     /// Create a date-time from components with validation
     /// - Parameters:
     ///   - year: Year
@@ -118,8 +393,45 @@ extension RFC_5322.DateTime {
             minute: minute,
             second: second
         )
-
+        
         self.init(time: time, timezoneOffset: Time.TimezoneOffset(seconds: timezoneOffsetSeconds))
+    }
+}
+
+
+
+extension RFC_5322.DateTime {
+    /// Seconds since Unix epoch (computed property for compatibility)
+    public var secondsSinceEpoch: Int {
+        time.secondsSinceEpoch
+    }
+    
+    /// Timezone offset in seconds (computed property for compatibility)
+    public var timezoneOffsetSeconds: Int {
+        timezoneOffset.seconds
+    }
+}
+
+// MARK: - Comparable
+
+extension RFC_5322.DateTime {
+    public static func < (lhs: Self, rhs: Self) -> Bool {
+        lhs.secondsSinceEpoch < rhs.secondsSinceEpoch
+    }
+}
+
+// MARK: - Equatable & Hashable
+
+extension RFC_5322.DateTime {
+    /// Two DateTimes are equal if they represent the same moment in time
+    /// (same secondsSinceEpoch), regardless of timezone offset
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.secondsSinceEpoch == rhs.secondsSinceEpoch
+    }
+
+    /// Hash based on the moment in time, not timezone display
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(secondsSinceEpoch)
     }
 }
 
@@ -146,7 +458,8 @@ extension RFC_5322.DateTime {
         // Components calculated from valid epoch seconds are always valid
         // Use unchecked initializer to bypass validation in hot path
         return RFC_5322.Date.Components(
-            uncheckedYear: localTime.year.value,
+            __unchecked: (),
+            year: localTime.year.value,
             month: localTime.month.value,
             day: localTime.day.value,
             hour: localTime.hour.value,
@@ -172,225 +485,15 @@ extension RFC_5322.DateTime {
     public static let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 }
 
-// MARK: - DateTime Formatter (Separated formatting logic)
-
-extension RFC_5322.DateTime {
-    /// Dedicated formatter for RFC 5322 date-time strings
-    ///
-    /// Separates formatting logic from the data model, following protocol witness pattern.
-    /// Format: "Mon, 01 Jan 2024 12:34:56 +0000"
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let dt = RFC_5322.DateTime(year: 2024, month: 1, day: 1)
-    /// let formatted = RFC_5322.DateTime.Formatter.format(dt)
-    /// ```
-    public enum Formatter {
-        /// Formats a date-time as RFC 5322 date-time string
-        /// Optimized implementation avoiding multiple formatter allocations
-        public static func format(_ value: RFC_5322.DateTime) -> String {
-            let components = value.components
-
-            let dayName = RFC_5322.DateTime.dayNames[components.weekday]
-            let monthName = RFC_5322.DateTime.monthNames[components.month - 1]
-
-            // Manually format numbers with zero-padding to avoid formatter overhead
-            let day = components.day.zeroPaddedTwoDigits()
-            let year = components.year.zeroPaddedFourDigits()
-            let hour = components.hour.zeroPaddedTwoDigits()
-            let minute = components.minute.zeroPaddedTwoDigits()
-            let second = components.second.zeroPaddedTwoDigits()
-
-            // Format timezone offset
-            let offsetSign = value.timezoneOffsetSeconds >= 0 ? "+" : "-"
-            let offsetHours = abs(value.timezoneOffsetSeconds) / Time.Calendar.Gregorian.TimeConstants.secondsPerHour
-            let offsetMinutes = (abs(value.timezoneOffsetSeconds) % Time.Calendar.Gregorian.TimeConstants.secondsPerHour) / Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
-            let timezone = "\(offsetSign)\(offsetHours.zeroPaddedTwoDigits())\(offsetMinutes.zeroPaddedTwoDigits())"
-
-            return "\(dayName), \(day) \(monthName) \(year) \(hour):\(minute):\(second) \(timezone)"
-        }
-    }
-}
-
-// MARK: - Swift-Native Formatting
-
-extension RFC_5322.DateTime {
-    /// Formats this date-time as an RFC 5322 date-time string
-    ///
-    /// This method provides a Swift-native formatting interface without protocol dependencies.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let dt = try RFC_5322.DateTime(year: 2024, month: 1, day: 1)
-    /// let formatted = dt.formatted()  // "Mon, 01 Jan 2024 00:00:00 +0000"
-    /// ```
-    public func formatted() -> String {
-        Formatter.format(self)
-    }
-
-    /// Formats a date-time as RFC 5322 date-time string
-    /// Legacy method for protocol compatibility
-    public func format(_ value: Self) -> String {
-        Formatter.format(value)
-    }
-}
-
-// MARK: - DateTime Parser (Separated parsing logic)
-
-extension RFC_5322.DateTime {
-    /// Dedicated parser for RFC 5322 date-time strings
-    ///
-    /// Separates parsing logic from the data model, following protocol witness pattern.
-    /// Supports formats:
-    /// - "Mon, 01 Jan 2024 12:34:56 +0000" (with seconds)
-    /// - "Mon, 01 Jan 2024 12:34 +0000" (without seconds)
-    /// - Timezone offsets like +0000, -0500, etc.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let dt = try RFC_5322.DateTime.Parser.parse("Mon, 01 Jan 2024 12:00:00 +0000")
-    /// ```
-    public enum Parser {
-        /// Parse RFC 5322 date-time string
-        /// - Parameter value: The RFC 5322 date-time string
-        /// - Returns: DateTime
-        /// - Throws: RFC_5322.Date.Error if parsing fails
-        public static func parse(_ value: some StringProtocol) throws -> RFC_5322.DateTime {
-        // Split into components
-        let parts = value.split(separator: " ").map(String.init)
-
-        // Expect at least 6 parts: "Mon," "01" "Jan" "2024" "12:34:56" "+0000"
-        // or 6 parts for no seconds: "Mon," "01" "Jan" "2024" "12:34" "+0000"
-        guard parts.count >= 6 else {
-            throw RFC_5322.Date.Error.invalidFormat("Expected at least 6 components")
-        }
-
-        // Parse day name (optional, for validation)
-        let dayName = parts[0].split(separator: ",").map(String.init).first ?? parts[0]
-        guard let expectedWeekday = RFC_5322.DateTime.dayNames.firstIndex(of: dayName) else {
-            throw RFC_5322.Date.Error.invalidDayName(dayName)
-        }
-
-        // Parse day
-        guard let day = Int(parts[1]), day >= 1, day <= 31 else {
-            throw RFC_5322.Date.Error.invalidDay(parts[1])
-        }
-
-        // Parse month
-        guard let monthIndex = RFC_5322.DateTime.monthNames.firstIndex(of: parts[2]) else {
-            throw RFC_5322.Date.Error.invalidMonth(parts[2])
-        }
-        let month = monthIndex + 1
-
-        // Parse year
-        guard let year = Int(parts[3]), year >= 1900 else {
-            throw RFC_5322.Date.Error.invalidYear(parts[3])
-        }
-
-        // Parse time (HH:MM:SS or HH:MM)
-        let timeParts = parts[4].split(separator: ":").map(String.init)
-        guard timeParts.count >= 2, timeParts.count <= 3 else {
-            throw RFC_5322.Date.Error.invalidTime(parts[4])
-        }
-
-        guard let hour = Int(timeParts[0]), hour >= 0, hour <= 23 else {
-            throw RFC_5322.Date.Error.invalidHour(timeParts[0])
-        }
-
-        guard let minute = Int(timeParts[1]), minute >= 0, minute <= 59 else {
-            throw RFC_5322.Date.Error.invalidMinute(timeParts[1])
-        }
-
-        let second: Int
-        if timeParts.count == 3 {
-            guard let sec = Int(timeParts[2]), sec >= 0, sec <= 60 else {  // Allow leap second
-                throw RFC_5322.Date.Error.invalidSecond(timeParts[2])
-            }
-            second = sec
-        } else {
-            second = 0
-        }
-
-        // Parse timezone offset
-        let timezoneString = parts[5]
-        guard timezoneString.count == 5 else {
-            throw RFC_5322.Date.Error.invalidTimezone(timezoneString)
-        }
-
-        let sign = timezoneString.first == "+" ? 1 : -1
-        let offsetString = String(timezoneString.dropFirst())
-
-        guard offsetString.count == 4,
-              let offsetHours = Int(offsetString.prefix(2)),
-              let offsetMinutes = Int(offsetString.suffix(2)),
-              offsetHours >= 0, offsetHours <= 23,
-              offsetMinutes >= 0, offsetMinutes <= 59
-        else {
-            throw RFC_5322.Date.Error.invalidTimezone(timezoneString)
-        }
-
-        let timezoneOffsetSeconds = sign * (
-            offsetHours * Time.Calendar.Gregorian.TimeConstants.secondsPerHour +
-            offsetMinutes * Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
-        )
-
-        // Create date-time in UTC with validated components
-        let dateTime = try RFC_5322.DateTime(
-            year: year,
-            month: month,
-            day: day,
-            hour: hour,
-            minute: minute,
-            second: second
-        )
-
-        // Adjust for timezone offset to get UTC
-        // If timezone is +0500, we subtract 5 hours to get UTC
-        let utcDateTime = dateTime.subtracting(timezoneOffsetSeconds)
-
-        // Validate weekday matches (using the local time components)
-        let localDateTime = RFC_5322.DateTime(secondsSinceEpoch: utcDateTime.secondsSinceEpoch, timezoneOffsetSeconds: timezoneOffsetSeconds)
-        let actualWeekday = localDateTime.components.weekday
-        guard actualWeekday == expectedWeekday else {
-            throw RFC_5322.Date.Error.weekdayMismatch(
-                expected: RFC_5322.DateTime.dayNames[expectedWeekday],
-                actual: RFC_5322.DateTime.dayNames[actualWeekday]
-            )
-        }
-
-        return localDateTime
-        }
+extension StringProtocol {
+    public init(_ dateTime: RFC_5322.DateTime) {
+        self = Self(decoding: [UInt8](dateTime), as: UTF8.self)
     }
 }
 
 // MARK: - Swift-Native Parsing
 
-extension RFC_5322.DateTime {
-    /// Creates a date-time by parsing an RFC 5322 date-time string
-    ///
-    /// This initializer provides a Swift-native parsing interface without protocol dependencies.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let dt = try RFC_5322.DateTime(parsing: "Mon, 01 Jan 2024 12:00:00 +0000")
-    /// ```
-    ///
-    /// - Parameter string: The RFC 5322 date-time string to parse
-    /// - Throws: `RFC_5322.Date.Error` if parsing fails
-    public init(parsing string: some StringProtocol) throws {
-        self = try Parser.parse(string)
-    }
 
-    /// Parse RFC 5322 date-time string
-    /// Legacy method for protocol compatibility
-    public func parse(_ value: some StringProtocol) throws -> Self {
-        try Parser.parse(value)
-    }
-}
 
 // MARK: - Compositional Operations (Swifty monoid/functor-like behavior)
 
@@ -534,7 +637,17 @@ extension RFC_5322.DateTime: Codable {
 // MARK: - CustomStringConvertible
 
 extension RFC_5322.DateTime: CustomStringConvertible {
+    /// String representation of the date-time
+    ///
+    /// Composes through canonical byte representation for academic correctness.
+    ///
+    /// ## Category Theory
+    ///
+    /// String display composes as:
+    /// ```
+    /// DateTime → [UInt8] (ASCII) → String (UTF-8 interpretation)
+    /// ```
     public var description: String {
-        formatted()
+        String(decoding: [UInt8](self), as: UTF8.self)
     }
 }

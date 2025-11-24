@@ -5,13 +5,14 @@
 //  Type conversions for RFC 5322 Message
 //
 
-public import Standards
+import Standards
+import StandardTime
 import INCITS_4_1986
 import RFC_1123
 
 // MARK: - Constants
 
-private extension [UInt8] {
+package extension [UInt8] {
     static let fromPrefix: [UInt8] = .init(utf8: "From: ")
     static let toPrefix: [UInt8] = .init(utf8: "To: ")
     static let ccPrefix: [UInt8] = .init(utf8: "Cc: ")
@@ -25,154 +26,76 @@ private extension [UInt8] {
 
 // MARK: - EmailAddress
 
+
+// MARK: - Header.Name
+
 extension [UInt8] {
-    /// Creates RFC 5322 formatted email address bytes
-    /// Direct byte-level construction without intermediate String allocation
-    public init(_ emailAddress: RFC_5322.EmailAddress) {
-        var result = [UInt8]()
+    /// Creates ASCII byte representation of an RFC 5322 header name
+    ///
+    /// This is the canonical serialization of header names to bytes.
+    /// RFC 5322 header names are ASCII-only by definition.
+    ///
+    /// ## Category Theory
+    ///
+    /// This is the most universal serialization (natural transformation):
+    /// - **Domain**: RFC_5322.Header.Name (structured data)
+    /// - **Codomain**: [UInt8] (ASCII bytes)
+    ///
+    /// String representation is derived as composition:
+    /// ```
+    /// Header.Name → [UInt8] (ASCII) → String (UTF-8 interpretation)
+    /// ```
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let name = RFC_5322.Header.Name.contentType
+    /// let bytes = [UInt8](name)
+    /// // bytes == "Content-Type" as ASCII bytes
+    /// ```
+    ///
+    /// - Parameter name: The header name to serialize
+    public init(_ name: RFC_5322.Header.Name) {
+        self = Array(name.rawValue.utf8)
+    }
+}
 
-        if let displayName = emailAddress.displayName {
-            // Check if quoting is needed
-            let needsQuoting = displayName.contains(where: {
-                !$0.isASCIILetter && !$0.isASCIIDigit && !$0.isASCIIWhitespace || $0.asciiValue == nil
-            })
+// MARK: - Header.Value
 
-            if needsQuoting {
-                result.append(.dquote)
-                result.append(utf8: displayName)
-                result.append(.dquote)
-            } else {
-                result.append(utf8: displayName)
-            }
-
-            result.append(.space)
-            result.append(.lt)
-            result.append(utf8: emailAddress.localPart.description)
-            result.append(.at)
-            result.append(utf8: emailAddress.domain.name)
-            result.append(.gt)
-        } else {
-            result.append(utf8: emailAddress.localPart.description)
-            result.append(.at)
-            result.append(utf8: emailAddress.domain.name)
-        }
-
-        self = result
+extension [UInt8] {
+    /// Creates ASCII byte representation of an RFC 5322 header value
+    ///
+    /// This is the canonical serialization of header values to bytes.
+    /// RFC 5322 header values are ASCII with possible folding whitespace.
+    ///
+    /// ## Category Theory
+    ///
+    /// This is the most universal serialization (natural transformation):
+    /// - **Domain**: RFC_5322.Header.Value (structured data)
+    /// - **Codomain**: [UInt8] (ASCII bytes)
+    ///
+    /// String representation is derived as composition:
+    /// ```
+    /// Header.Value → [UInt8] (ASCII) → String (UTF-8 interpretation)
+    /// ```
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let value = RFC_5322.Header.Value("text/html")
+    /// let bytes = [UInt8](value)
+    /// // bytes == "text/html" as ASCII bytes
+    /// ```
+    ///
+    /// - Parameter value: The header value to serialize
+    public init(_ value: RFC_5322.Header.Value) {
+        self = Array(value.rawValue.utf8)
     }
 }
 
 // MARK: - Header
 
-extension [UInt8] {
-    /// Creates RFC 5322 formatted header bytes
-    /// Direct byte-level construction without string interpolation
-    public init(_ header: RFC_5322.Header) {
-        var result = [UInt8]()
-        result.append(utf8: header.name.rawValue)
-        result.append(.colon)
-        result.append(.space)
-        result.append(utf8: header.value)
-        self = result
-    }
-}
+
 
 // MARK: - DateTime
 
-extension [UInt8] {
-    /// Creates RFC 5322 formatted date-time bytes
-    public init(_ dateTime: RFC_5322.DateTime) {
-        self = Array(dateTime.description.utf8)
-    }
-}
-
-// MARK: - Message
-
-extension [UInt8] {
-    /// Creates RFC 5322 message bytes from a Message
-    ///
-    /// Generates headers and body in RFC 5322 format suitable for .eml files
-    /// or SMTP transmission. BCC recipients are excluded from the output per RFC 5322.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let message = RFC_5322.Message(...)
-    /// let bytes = [UInt8](message)
-    /// ```
-    public init(_ message: RFC_5322.Message) {
-        // Pre-allocate capacity to avoid reallocations
-        // Rough estimate: headers (~500 bytes) + body
-        var result = [UInt8]()
-        result.reserveCapacity(500 + message.body.count)
-
-        // Required headers in recommended order (RFC 5322 Section 3.6)
-
-        // From (required)
-        result.append(contentsOf: [UInt8].fromPrefix)
-        result.append(contentsOf: [UInt8](message.from))
-        result.append(contentsOf: [UInt8].crlf)
-
-        // To (required)
-        result.append(contentsOf: [UInt8].toPrefix)
-        var first = true
-        for address in message.to {
-            if !first { result.append(contentsOf: [UInt8].comma) }
-            first = false
-            result.append(contentsOf: [UInt8](address))
-        }
-        result.append(contentsOf: [UInt8].crlf)
-
-        // Cc (optional)
-        if let cc = message.cc, !cc.isEmpty {
-            result.append(contentsOf: [UInt8].ccPrefix)
-            first = true
-            for address in cc {
-                if !first { result.append(contentsOf: [UInt8].comma) }
-                first = false
-                result.append(contentsOf: [UInt8](address))
-            }
-            result.append(contentsOf: [UInt8].crlf)
-        }
-
-        // Subject (required in practice)
-        result.append(contentsOf: [UInt8].subjectPrefix)
-        result.append(utf8: message.subject)
-        result.append(contentsOf: [UInt8].crlf)
-
-        // Date (required)
-        result.append(contentsOf: [UInt8].datePrefix)
-        result.append(contentsOf: [UInt8](message.date))
-        result.append(contentsOf: [UInt8].crlf)
-
-        // Message-ID (recommended)
-        result.append(contentsOf: [UInt8].messageIdPrefix)
-        result.append(utf8: message.messageId)
-        result.append(contentsOf: [UInt8].crlf)
-
-        // Reply-To (optional)
-        if let replyTo = message.replyTo {
-            result.append(contentsOf: [UInt8].replyToPrefix)
-            result.append(contentsOf: [UInt8](replyTo))
-            result.append(contentsOf: [UInt8].crlf)
-        }
-
-        // MIME-Version (required for MIME messages)
-        result.append(contentsOf: [UInt8].mimeVersionPrefix)
-        result.append(utf8: message.mimeVersion)
-        result.append(contentsOf: [UInt8].crlf)
-
-        // Additional custom headers (in order)
-        for header in message.additionalHeaders {
-            result.append(contentsOf: [UInt8](header))
-            result.append(contentsOf: [UInt8].crlf)
-        }
-
-        // Empty line separates headers from body
-        result.append(contentsOf: [UInt8].crlf)
-
-        // Body (as bytes)
-        result.append(contentsOf: message.body)
-
-        self = result
-    }
-}

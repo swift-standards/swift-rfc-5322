@@ -6,7 +6,7 @@
 //
 
 import RFC_1123
-public import Standards
+import Standards
 import INCITS_4_1986
 
 extension RFC_5322 {
@@ -56,7 +56,7 @@ extension RFC_5322 {
         public let date: RFC_5322.DateTime
 
         /// Unique message identifier
-        public let messageId: String
+        public let messageId: Message.ID
 
         /// Message body as bytes (typically MIME content from RFC 2045/2046)
         public let body: [UInt8]
@@ -89,7 +89,7 @@ extension RFC_5322 {
             replyTo: EmailAddress? = nil,
             date: RFC_5322.DateTime,
             subject: String,
-            messageId: String,
+            messageId: Message.ID,
             body: [UInt8],
             additionalHeaders: [Header] = [],
             mimeVersion: String = "1.0"
@@ -110,11 +110,223 @@ extension RFC_5322 {
 }
 
 extension RFC_5322.Message {
-    /// Generates a unique Message-ID
+    /// Parses an RFC 5322 message from canonical byte representation (CANONICAL PRIMITIVE)
     ///
-    /// Format: `<timestamp.randomBytes@domain>` where domain is extracted from the from address
-    /// Note: For production use, provide a platform-specific UUID or random ID generator
-    public static func generateMessageId(from: RFC_5322.EmailAddress, uniqueId: String) -> String {
-        "<\(uniqueId)@\(from.domain.name)>"
+    /// **FUTURE TASK**: This is the canonical primitive parser for RFC 5322 messages.
+    ///
+    /// ## Complexity Note
+    ///
+    /// Message parsing is significantly more complex than component parsing because it must handle:
+    /// - Header folding (CRLF + whitespace continuation)
+    /// - Headers in arbitrary order
+    /// - Optional and duplicate headers
+    /// - Unknown/custom headers
+    /// - MIME multi-part structure
+    /// - Encoded-words in headers (=?charset?encoding?text?=)
+    /// - Body transfer encodings (base64, quoted-printable)
+    /// - Lenient parsing vs. strict validation
+    ///
+    /// ## Category Theory
+    ///
+    /// This is the fundamental parsing transformation:
+    /// - **Domain**: [UInt8] (RFC 5322 formatted bytes)
+    /// - **Codomain**: RFC_5322.Message (structured data)
+    ///
+    /// String-based parsing is derived as composition:
+    /// ```
+    /// String → [UInt8] (UTF-8 bytes) → Message
+    /// ```
+    ///
+    /// ## Implementation Strategy
+    ///
+    /// When implemented, this parser should:
+    /// 1. Split message into header section and body at first blank line (CRLF CRLF)
+    /// 2. Parse headers with unfolding (handle CRLF + whitespace)
+    /// 3. Extract required headers (From, To, Date, etc.)
+    /// 4. Preserve additional headers in order
+    /// 5. Handle MIME structure if present
+    /// 6. Decode body based on Content-Transfer-Encoding
+    ///
+    /// ## Example (Future)
+    ///
+    /// ```swift
+    /// let bytes = Array(emlFileContents.utf8)
+    /// let message = try RFC_5322.Message(ascii: bytes)
+    /// ```
+    ///
+    /// - Parameter bytes: The ASCII byte representation of an RFC 5322 message
+    /// - Throws: `RFC_5322.Message.Error` if the bytes are malformed
+    public init(ascii bytes: [UInt8]) throws(Error) {
+        // TODO: Implement RFC 5322 message parsing
+        // This is a complex parser that must handle:
+        // - Header/body separation
+        // - Header unfolding
+        // - Required header extraction (From, To, Date, Subject)
+        // - Optional header handling (Cc, Bcc, Reply-To, Message-ID)
+        // - MIME structure parsing
+        // - Custom header preservation
+        // - Various encoding schemes
+
+        fatalError("RFC 5322 Message parsing not yet implemented")
     }
 }
+
+extension RFC_5322.Message {
+    /// Initialize from string representation (STRING CONVENIENCE)
+    ///
+    /// **FUTURE TASK**: Composes through canonical byte representation.
+    ///
+    /// ## Category Theory
+    ///
+    /// Parsing composes as:
+    /// ```
+    /// String → [UInt8] (UTF-8) → Message
+    /// ```
+    ///
+    /// ## Example (Future)
+    ///
+    /// ```swift
+    /// let message = try RFC_5322.Message(emlFileContents)
+    /// ```
+    ///
+    /// - Parameter string: The string representation of an RFC 5322 message
+    /// - Throws: `RFC_5322.Message.Error` if the string is malformed
+    public init(_ string: some StringProtocol) throws(Error) {
+        try self.init(ascii: Array(string.utf8))
+    }
+}
+
+extension [UInt8] {
+    /// Creates RFC 5322 message bytes from a Message (CANONICAL SERIALIZATION)
+    ///
+    /// Generates headers and body in RFC 5322 format suitable for .eml files
+    /// or SMTP transmission. BCC recipients are excluded from the output per RFC 5322.
+    ///
+    /// ## Category Theory
+    ///
+    /// This is the fundamental serialization transformation:
+    /// - **Domain**: RFC_5322.Message (structured data)
+    /// - **Codomain**: [UInt8] (RFC 5322 formatted bytes)
+    ///
+    /// String representation is derived as composition:
+    /// ```
+    /// Message → [UInt8] (RFC 5322 format) → String (UTF-8 interpretation)
+    /// ```
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let message = RFC_5322.Message(...)
+    /// let bytes = [UInt8](message)
+    /// ```
+    public init(_ message: RFC_5322.Message) {
+        // Pre-allocate capacity to avoid reallocations
+        // Rough estimate: headers (~500 bytes) + body
+        var result = [UInt8]()
+        result.reserveCapacity(500 + message.body.count)
+
+        // Required headers in recommended order (RFC 5322 Section 3.6)
+
+        // From (required)
+        result.append(contentsOf: [UInt8].fromPrefix)
+        result.append(contentsOf: [UInt8](message.from))
+        result.append(contentsOf: [UInt8].ascii.crlf)
+
+        // To (required)
+        result.append(contentsOf: [UInt8].toPrefix)
+        var first = true
+        for address in message.to {
+            if !first { result.append(contentsOf: [UInt8].comma) }
+            first = false
+            result.append(contentsOf: [UInt8](address))
+        }
+        result.append(contentsOf: [UInt8].ascii.crlf)
+
+        // Cc (optional)
+        if let cc = message.cc, !cc.isEmpty {
+            result.append(contentsOf: [UInt8].ccPrefix)
+            first = true
+            for address in cc {
+                if !first { result.append(contentsOf: [UInt8].comma) }
+                first = false
+                result.append(contentsOf: [UInt8](address))
+            }
+            result.append(contentsOf: [UInt8].ascii.crlf)
+        }
+
+        // Subject (required in practice)
+        result.append(contentsOf: [UInt8].subjectPrefix)
+        result.append(utf8: message.subject)
+        result.append(contentsOf: [UInt8].ascii.crlf)
+
+        // Date (required)
+        result.append(contentsOf: [UInt8].datePrefix)
+        result.append(contentsOf: [UInt8](message.date))
+        result.append(contentsOf: [UInt8].ascii.crlf)
+
+        // Message-ID (recommended)
+        result.append(contentsOf: [UInt8].messageIdPrefix)
+        result.append(contentsOf: [UInt8](message.messageId))
+        result.append(contentsOf: [UInt8].ascii.crlf)
+
+        // Reply-To (optional)
+        if let replyTo = message.replyTo {
+            result.append(contentsOf: [UInt8].replyToPrefix)
+            result.append(contentsOf: [UInt8](replyTo))
+            result.append(contentsOf: [UInt8].ascii.crlf)
+        }
+
+        // MIME-Version (required for MIME messages)
+        result.append(contentsOf: [UInt8].mimeVersionPrefix)
+        result.append(utf8: message.mimeVersion)
+        result.append(contentsOf: [UInt8].ascii.crlf)
+
+        // Additional custom headers (in order)
+        for header in message.additionalHeaders {
+            result.append(contentsOf: [UInt8](header))
+            result.append(contentsOf: [UInt8].ascii.crlf)
+        }
+
+        // Empty line separates headers from body
+        result.append(contentsOf: [UInt8].ascii.crlf)
+
+        // Body (as bytes)
+        result.append(contentsOf: message.body)
+
+        self = result
+    }
+}
+
+extension StringProtocol {
+    /// String representation of the Message-ID
+    ///
+    /// Composes through canonical byte representation for academic correctness.
+    ///
+    /// ## Category Theory
+    ///
+    /// String display composes as:
+    /// ```
+    /// Message.ID → [UInt8] (ASCII) → String (UTF-8 interpretation)
+    /// ```
+    public init(_ value: RFC_5322.Message) {
+        self = Self(decoding: [UInt8](value), as: UTF8.self)
+    }
+}
+
+extension RFC_5322.Message: CustomStringConvertible {
+    /// String representation of the RFC 5322 message
+    ///
+    /// Composes through canonical byte representation for academic correctness.
+    ///
+    /// ## Category Theory
+    ///
+    /// String display composes as:
+    /// ```
+    /// Message → [UInt8] (RFC 5322 format) → String (UTF-8 interpretation)
+    /// ```
+    public var description: String {
+        String(decoding: [UInt8](self), as: UTF8.self)
+    }
+}
+
+

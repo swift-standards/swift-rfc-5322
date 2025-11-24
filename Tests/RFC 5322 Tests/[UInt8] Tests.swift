@@ -159,7 +159,7 @@ struct `[UInt8] Conversions Tests` {
         // Should contain CRLF sequences
         var hasCRLF = false
         for i in 0..<(bytes.count - 1) {
-            if bytes[i] == UInt8.cr && bytes[i + 1] == UInt8.lf {
+            if bytes[i] == UInt8.ascii.cr && bytes[i + 1] == UInt8.ascii.lf {
                 hasCRLF = true
                 break
             }
@@ -283,8 +283,8 @@ struct `[UInt8] Conversions Tests` {
         // Should contain double CRLF (empty line separator)
         var hasDoubleCRLF = false
         for i in 0..<(bytes.count - 3) {
-            if bytes[i] == UInt8.cr && bytes[i + 1] == UInt8.lf &&
-               bytes[i + 2] == UInt8.cr && bytes[i + 3] == UInt8.lf {
+            if bytes[i] == UInt8.ascii.cr && bytes[i + 1] == UInt8.ascii.lf &&
+               bytes[i + 2] == UInt8.ascii.cr && bytes[i + 3] == UInt8.ascii.lf {
                 hasDoubleCRLF = true
                 break
             }

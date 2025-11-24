@@ -31,7 +31,7 @@ extension String {
         if let name = emailAddress.displayName {
             // Quote the display name if it contains special characters or non-ASCII
             let needsQuoting = name.contains(where: {
-                !$0.isASCIILetter && !$0.isASCIIDigit && !$0.isASCIIWhitespace || $0.asciiValue == nil
+                !$0.ascii.isLetter && !$0.ascii.isDigit && !$0.ascii.isWhitespace || $0.asciiValue == nil
             })
             let quotedName = needsQuoting ? "\"\(name)\"" : name
             self = "\(quotedName) <\(emailAddress.localPart)@\(emailAddress.domain.name)>"  // Exactly one space before angle bracket
@@ -47,10 +47,17 @@ extension String {
     }
 }
 
-extension String {
-    /// Creates header field string from RFC 5322 Header
+extension StringProtocol {
+    /// String representation of an RFC 5322 header
     ///
-    /// Renders as "Name: Value" format per RFC 5322 Section 2.2.
+    /// Composes through canonical byte representation for academic correctness.
+    ///
+    /// ## Category Theory
+    ///
+    /// String display composes as:
+    /// ```
+    /// Header → [UInt8] (ASCII) → String (UTF-8 interpretation)
+    /// ```
     ///
     /// ## Example
     ///
@@ -59,6 +66,52 @@ extension String {
     /// let rendered = String(header)  // "Subject: Hello"
     /// ```
     public init(_ header: RFC_5322.Header) {
-        self = "\(header.name): \(header.value)"
+        self = Self(decoding: [UInt8](header), as: UTF8.self)
+    }
+}
+
+extension String {
+    /// Creates string representation of RFC 5322 header value (STRING REPRESENTATION)
+    ///
+    /// Composes through canonical byte representation for academic correctness.
+    ///
+    /// ## Category Theory
+    ///
+    /// String display composes as:
+    /// ```
+    /// Header.Value → [UInt8] (ASCII) → String (UTF-8 interpretation)
+    /// ```
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let value = RFC_5322.Header.Value("text/html")
+    /// let string = String(value)  // "text/html"
+    /// ```
+    public init(_ value: RFC_5322.Header.Value) {
+        self = String(decoding: [UInt8](value), as: UTF8.self)
+    }
+}
+
+extension String {
+    /// Creates string representation of RFC 5322 header name (STRING REPRESENTATION)
+    ///
+    /// Composes through canonical byte representation for academic correctness.
+    ///
+    /// ## Category Theory
+    ///
+    /// String display composes as:
+    /// ```
+    /// Header.Name → [UInt8] (ASCII) → String (UTF-8 interpretation)
+    /// ```
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let name = RFC_5322.Header.Name.contentType
+    /// let string = String(name)  // "Content-Type"
+    /// ```
+    public init(_ name: RFC_5322.Header.Name) {
+        self = String(decoding: [UInt8](name), as: UTF8.self)
     }
 }

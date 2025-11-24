@@ -171,14 +171,11 @@ public struct Message: Hashable, Sendable {
     public let bcc: [EmailAddress]?
     public let replyTo: EmailAddress?
     public let subject: String
-    public let date: Date
-    public let messageId: String
-    public let body: Data
+    public let date: RFC_5322.DateTime
+    public let messageId: Message.ID
+    public let body: [UInt8]
     public let additionalHeaders: [Header]
     public let mimeVersion: String
-
-    public var bodyString: String?
-    public static func generateMessageId(from: EmailAddress, uniqueId: String) -> String
 }
 
 extension [UInt8] {
@@ -188,6 +185,39 @@ extension [UInt8] {
 extension String {
     public init(_ message: RFC_5322.Message)
 }
+```
+
+### Message.ID Type
+
+RFC 5322 compliant Message-ID with canonical byte representation:
+
+```swift
+public struct Message.ID: Hashable, Sendable {
+    // Convenience constructors
+    public init(uniqueId: String, domain: RFC_1123.Domain)
+    public init(from: RFC_5322.EmailAddress, uniqueId: String)
+
+    // Canonical transformations
+    public init(ascii bytes: [UInt8]) throws(Error)
+    public init(_ string: some StringProtocol) throws(Error)
+}
+
+extension [UInt8] {
+    public init(_ messageId: RFC_5322.Message.ID)
+}
+
+// Usage examples:
+let messageId = RFC_5322.Message.ID(
+    uniqueId: UUID().uuidString,
+    domain: "example.com"
+)
+
+let messageId2 = RFC_5322.Message.ID(
+    from: emailAddress,
+    uniqueId: "\(Date().timeIntervalSince1970)"
+)
+
+let messageId3 = try RFC_5322.Message.ID("<abc123@example.com>")
 ```
 
 ### Header Type
