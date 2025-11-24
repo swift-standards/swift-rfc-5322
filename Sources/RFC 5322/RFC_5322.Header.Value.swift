@@ -1,49 +1,57 @@
 //
-//  File.swift
+//  RFC_5322.Header.Value.swift
 //  swift-rfc-5322
 //
 //  Created by Coen ten Thije Boonkkamp on 19/11/2025.
 //
 
-import INCITS_4_1986
-
-// MARK: - Header.Value
+public import INCITS_4_1986
 
 extension RFC_5322.Header {
-    public struct Value: Hashable, Sendable, Codable {
+    public struct Value: Sendable, Hashable, Codable {
         public let rawValue: String
-
-        public init(_ rawValue: String) {
+        
+        init(
+            __unchecked: Void,
+            rawValue: String
+        ) {
             self.rawValue = rawValue
-        }
-
-        /// Hash value (case-insensitive)
-        public func hash(into hasher: inout Hasher) {
-            hasher.combine(rawValue.lowercased())
-        }
-
-        /// Equality comparison (case-insensitive)
-        public static func == (lhs: RFC_5322.Header.Value, rhs: RFC_5322.Header.Value) -> Bool {
-            lhs.rawValue.lowercased() == rhs.rawValue.lowercased()
         }
     }
 }
 
+extension RFC_5322.Header.Value  {
+    /// Equality comparison (case-sensitive)
+    public static func == (lhs: RFC_5322.Header.Value, rhs: RFC_5322.Header.Value) -> Bool {
+        lhs.rawValue == rhs.rawValue
+    }
 
+    /// Equality comparison with raw value (case-sensitive)
+    public static func == (lhs: RFC_5322.Header.Value, rhs: Self.RawValue) -> Bool {
+        lhs.rawValue == rhs
+    }
+}
 
-// MARK: - Header.Value Parsing
-
-extension RFC_5322.Header.Value {
+extension RFC_5322.Header.Value: UInt8.ASCII.Serializing {
+    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+    
     /// Parses a header value from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
-    /// RFC 5322 headers are ASCII with folding whitespace rules.
+    /// Implements RFC 5322 folding whitespace unfolding and character validation.
+    ///
+    /// ## RFC 5322 Compliance
+    ///
+    /// Per RFC 5322 Section 2.2:
+    /// - Field bodies may contain printable US-ASCII (0x20-0x7E) and HTAB (0x09)
+    /// - CR and LF are only allowed in CRLF folding sequences
+    /// - Unfolding removes any CRLF immediately followed by WSP (space or tab)
     ///
     /// ## Category Theory
     ///
     /// This is the fundamental parsing transformation:
-    /// - **Domain**: [UInt8] (ASCII bytes)
-    /// - **Codomain**: RFC_5322.Header.Value (structured data)
+    /// - **Domain**: [UInt8] (ASCII bytes with possible folding)
+    /// - **Codomain**: RFC_5322.Header.Value (unfolded, validated)
     ///
     /// String-based parsing is derived as composition:
     /// ```
@@ -53,87 +61,154 @@ extension RFC_5322.Header.Value {
     /// ## Example
     ///
     /// ```swift
+    /// // Simple value
     /// let bytes = Array("text/html; charset=UTF-8".utf8)
     /// let value = try RFC_5322.Header.Value(ascii: bytes)
+    ///
+    /// // Folded value (CRLF followed by space)
+    /// let folded = Array("text/html;\r\n charset=UTF-8".utf8)
+    /// let unfolded = try RFC_5322.Header.Value(ascii: folded)
+    /// // Result: "text/html; charset=UTF-8" (CRLF removed)
     /// ```
     ///
     /// - Parameter bytes: The ASCII byte representation of the header value
-    /// - Throws: `RFC_5322.Header.Value.Error` if the bytes are malformed
+    /// - Throws: `RFC_5322.Header.Value.Error` if the bytes contain invalid characters or improper folding
     public init(ascii bytes: [UInt8]) throws(Error) {
-        // Decode bytes as UTF-8 (which is ASCII-compatible)
-        let string = String(decoding: bytes, as: UTF8.self)
+        // RFC 5322 Section 2.2.3: Unfolding
+        // "Unfolding is accomplished by simply removing any CRLF
+        // that is immediately followed by WSP"
 
-        // For now, we accept any string
-        // In the future, we could validate RFC 5322 folding whitespace rules
-        // and throw Error.invalidFolding or Error.invalidCharacter
-        self.rawValue = string
+        // Step 1: Unfold and validate folding patterns
+        var unfolded = [UInt8]()
+        var i = 0
+
+        while i < bytes.count {
+            let byte = bytes[i]
+
+            // Check for CR
+            if byte == .ascii.cr {
+                // Must be followed by LF (CRLF sequence)
+                guard i + 1 < bytes.count, bytes[i + 1] == .ascii.lf else {
+                    let string = String(decoding: bytes, as: UTF8.self)
+                    throw Error.invalidCharacter(string, byte: byte, reason: "CR must be followed by LF")
+                }
+
+                // CRLF found - check if it's followed by WSP (folding)
+                if i + 2 < bytes.count,
+                   (bytes[i + 2] == .ascii.sp || bytes[i + 2] == .ascii.htab) {
+                    // Valid folding: skip CRLF, keep the WSP
+                    i += 2  // Skip CR and LF
+                    // Continue to add the WSP in next iteration
+                } else {
+                    // CRLF not followed by WSP - invalid
+                    let string = String(decoding: bytes, as: UTF8.self)
+                    throw Error.invalidFolding(string, byte: byte, reason: "CRLF must be followed by WSP (space or tab) for folding")
+                }
+            } else if byte == .ascii.lf {
+                // LF without CR - invalid
+                let string = String(decoding: bytes, as: UTF8.self)
+                throw Error.invalidCharacter(string, byte: byte, reason: "LF must be preceded by CR")
+            } else {
+                unfolded.append(byte)
+                i += 1
+            }
+        }
+
+        // Step 2: Validate characters in unfolded value
+        // RFC 5322 Section 2.2: Field body "may be composed of printable
+        // US-ASCII characters as well as the space (SP, ASCII value 32)
+        // and horizontal tab (HTAB, ASCII value 9) characters"
+        for byte in unfolded {
+            // Valid: printable ASCII (0x20-0x7E) OR HTAB (0x09)
+            let valid = byte.ascii.isPrintable || byte == .ascii.htab
+
+            guard valid else {
+                let string = String(decoding: unfolded, as: UTF8.self)
+                let reason: String
+                if byte.ascii.isControl {
+                    reason = "Control characters not allowed (except HTAB)"
+                } else {
+                    reason = "Must be printable ASCII or HTAB"
+                }
+                throw Error.invalidCharacter(string, byte: byte, reason: reason)
+            }
+        }
+
+        self.init(
+            __unchecked: (),
+            rawValue: String(decoding: unfolded, as: UTF8.self)
+        )
     }
 }
 
-extension StringProtocol {
-    /// String representation of the Message-ID
+extension [UInt8] {
+    /// Creates ASCII byte representation of an RFC 5322 header value
     ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// String display composes as:
-    /// ```
-    /// Message.ID → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    public init(_ value: RFC_5322.Header.Value) {
-        self = Self(decoding: [UInt8](value), as: UTF8.self)
-    }
-}
-
-extension RFC_5322.Header.Value {
-    /// Initialize from string representation (STRING CONVENIENCE)
-    ///
-    /// Composes through canonical byte representation for academic correctness.
+    /// This is the canonical serialization of header values to bytes.
+    /// RFC 5322 header values are ASCII with possible folding whitespace.
     ///
     /// ## Category Theory
     ///
-    /// Parsing composes as:
+    /// This is the most universal serialization (natural transformation):
+    /// - **Domain**: RFC_5322.Header.Value (structured data)
+    /// - **Codomain**: [UInt8] (ASCII bytes)
+    ///
+    /// String representation is derived as composition:
     /// ```
-    /// String → [UInt8] (UTF-8) → Header.Value
+    /// Header.Value → [UInt8] (ASCII) → String (UTF-8 interpretation)
     /// ```
     ///
     /// ## Example
     ///
     /// ```swift
-    /// let value = try RFC_5322.Header.Value("text/html; charset=UTF-8")
+    /// let value = RFC_5322.Header.Value("text/html")
+    /// let bytes = [UInt8](value)
+    /// // bytes == "text/html" as ASCII bytes
     /// ```
     ///
-    /// - Parameter string: The string representation of the header value
-    /// - Throws: `RFC_5322.Header.Value.Error` if the string is malformed
-    public init(_ string: some StringProtocol) throws(Error) {
-        try self.init(ascii: Array(string.utf8))
+    /// - Parameter value: The header value to serialize
+    public init(_ value: RFC_5322.Header.Value) {
+        self = Array(value.rawValue.utf8)
     }
 }
 
-// MARK: - Value Protocol Conformances
+extension RFC_5322.Header.Value: RawRepresentable {}
 
-extension RFC_5322.Header.Value: ExpressibleByStringLiteral {
-    /// Creates a header name from a string literal
-    ///
-    /// Allows convenient syntax: `let header: Header.Value = "X-Custom"`
-    public init(stringLiteral value: String) {
-        self.init(value)
-    }
-}
+extension RFC_5322.Header.Value: CustomStringConvertible {}
 
 extension RFC_5322.Header.Value: ExpressibleByIntegerLiteral {
-    /// Creates a header name from a string literal
+    /// Creates a header value from an integer literal
     ///
-    /// Allows convenient syntax: `let header: Header.Value = "X-Custom"`
+    /// **Warning**: Bypasses validation via `init(unchecked:)`.
+    /// Only use with known-valid compile-time constants.
+    ///
+    /// Convenient for numeric headers:
+    /// ```swift
+    /// let contentLength: Header.Value = 1234
+    /// let maxForwards: Header.Value = 70
+    /// ```
     public init(integerLiteral value: Int) {
-        self.init(String(value))
+        self.init(
+            __unchecked: (),
+            rawValue: String(value)
+        )
     }
 }
 
-extension RFC_5322.Header.Value: CustomStringConvertible {
-    /// Returns the header field name
-    public var description: String {
-        rawValue
+extension RFC_5322.Header.Value: ExpressibleByFloatLiteral {
+    /// Creates a header value from a float literal
+    ///
+    /// **Warning**: Bypasses validation via `init(unchecked:)`.
+    /// Only use with known-valid compile-time constants.
+    ///
+    /// Convenient for quality values:
+    /// ```swift
+    /// let quality: Header.Value = 0.8
+    /// ```
+    public init(floatLiteral value: Double) {
+        self.init(
+            __unchecked: (),
+            rawValue: String(value)
+        )
     }
 }
