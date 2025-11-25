@@ -1,13 +1,12 @@
 //
-//  File.swift
+//  RFC_5322.Header.Name.swift
 //  swift-rfc-5322
 //
 //  Created by Coen ten Thije Boonkkamp on 19/11/2025.
 //
 
-import INCITS_4_1986
+public import INCITS_4_1986
 
-// MARK: - Header.Name
 
 extension RFC_5322.Header {
     /// Email header field name
@@ -18,8 +17,8 @@ extension RFC_5322.Header {
     /// ## Example
     ///
     /// ```swift
-    /// let from: Self = fro
-    /// let custom: Self = "X-Custom-Header"
+    /// let from: Self = .from
+    /// let custom: Self = .init(__unchecked: (), rawValue: "X-Custom-Header")
     ///
     /// var headers: [RFC_5322.Header] = []
     /// headers.append(.init(name: .messageId, value: "<abc@example.com>"))
@@ -47,36 +46,45 @@ extension RFC_5322.Header {
     /// - `mimeVersion`: MIME version
     ///
     /// Custom headers can be created using the string-based initializer.
-    public struct Name: Hashable, Sendable, Codable {
+    public struct Name: Sendable, Codable {
         /// The header field name
         public let rawValue: String
-
+        
         /// Creates a header name
         ///
         /// - Parameter rawValue: The header field name (case-insensitive)
-        public init(_ rawValue: String) {
+        public init(
+            __unchecked: (),
+            rawValue: String
+        ) {
             // Header names are case-insensitive, but we preserve original case
             // for display purposes while using case-insensitive comparison
             self.rawValue = rawValue
         }
-
-        /// Hash value (case-insensitive)
-        public func hash(into hasher: inout Hasher) {
-            hasher.combine(rawValue.lowercased())
-        }
-
-        /// Equality comparison (case-insensitive)
-        public static func == (lhs: RFC_5322.Header.Name, rhs: RFC_5322.Header.Name) -> Bool {
-            lhs.rawValue.lowercased() == rhs.rawValue.lowercased()
-        }
     }
 }
 
+extension RFC_5322.Header.Name: Hashable {
+    
+    /// Hash value (case-insensitive)
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(rawValue.lowercased())
+    }
+    
+    /// Equality comparison (case-insensitive)
+    public static func == (lhs: RFC_5322.Header.Name, rhs: RFC_5322.Header.Name) -> Bool {
+        lhs.rawValue.lowercased() == rhs.rawValue.lowercased()
+    }
+    
+    /// Equality comparison (case-insensitive)
+    public static func == (lhs: RFC_5322.Header.Name, rhs: Self.RawValue) -> Bool {
+        lhs.rawValue.lowercased() == rhs.lowercased()
+    }
+}
 
-
-// MARK: - Header.Name Parsing
-
-extension RFC_5322.Header.Name {
+extension RFC_5322.Header.Name: UInt8.ASCII.Serializing {
+    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+    
     /// Parses a header name from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
@@ -102,12 +110,13 @@ extension RFC_5322.Header.Name {
     ///
     /// - Parameter bytes: The ASCII byte representation of the header name
     /// - Throws: `RFC_5322.Header.Name.Error` if the bytes are malformed
-    public init(ascii bytes: [UInt8]) throws(Error) {
+    public init<Bytes: Collection>(ascii bytes: Bytes, in context: Void) throws(Error)
+    where Bytes.Element == UInt8 {
         // Empty check
         guard !bytes.isEmpty else {
             throw Error.empty
         }
-
+        
         // Validate characters: printable ASCII except colon
         // ftext = %d33-57 / %d59-126
         // Using INCITS_4_1986: .ascii.isVisible (0x21-0x7E) excludes colon (0x3A)
@@ -122,181 +131,137 @@ extension RFC_5322.Header.Name {
             }
         }
 
-        // Store the validated string
-        let string = String(decoding: bytes, as: UTF8.self)
-        self.init(string)
+        self.init(__unchecked: (), rawValue: String(decoding: bytes, as: UTF8.self))
     }
 }
 
-// MARK: - Validation
-
-extension RFC_5322.Header.Name {
-    /// Creates a validated header field name
+extension [UInt8] {
+    /// Creates ASCII byte representation of an RFC 5322 header name
     ///
-    /// Composes through canonical byte representation for academic correctness.
-    /// Validates the field name against RFC 5322 Section 3.6.8 grammar.
-    ///
-    /// - Parameter value: Field name to validate
-    /// - Throws: `RFC_5322.Error.invalidFieldName` if invalid
+    /// This is the canonical serialization of header names to bytes.
+    /// RFC 5322 header names are ASCII-only by definition.
     ///
     /// ## Category Theory
     ///
-    /// Parsing composes as:
-    /// ```
-    /// String → [UInt8] (UTF-8) → Header.Name
-    /// ```
+    /// This is the most universal serialization (natural transformation):
+    /// - **Domain**: RFC_5322.Header.Name (structured data)
+    /// - **Codomain**: [UInt8] (ASCII bytes)
     ///
-    /// ## RFC 5322 Section 3.6.8 Grammar
-    ///
+    /// String representation is derived as composition:
     /// ```
-    /// field-name = 1*ftext
-    /// ftext      = %d33-57 / %d59-126  ; Printable ASCII except colon
+    /// Header.Name → [UInt8] (ASCII) → String (UTF-8 interpretation)
     /// ```
     ///
     /// ## Example
     ///
     /// ```swift
-    /// let valid = try RFC_5322.Header.Name(validating: "X-Custom-Header")
-    /// let invalid = try RFC_5322.Header.Name(validating: "X:Bad")  // Throws
+    /// let name = RFC_5322.Header.Name.contentType
+    /// let bytes = [UInt8](name)
+    /// // bytes == "Content-Type" as ASCII bytes
     /// ```
-    public init(_ value: some StringProtocol) throws(Error) {
-        // Convert to canonical byte representation (UTF-8, which is ASCII-compatible)
-        let bytes = Array(value.utf8)
-
-        // Delegate to primitive byte-level parser
-        try self.init(ascii: bytes)
+    ///
+    /// - Parameter name: The header name to serialize
+    public init(_ name: RFC_5322.Header.Name) {
+        self = Array(name.rawValue.utf8)
     }
 }
 
-extension StringProtocol {
-    /// String representation of the Message-ID
-    ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// String display composes as:
-    /// ```
-    /// Message.ID → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    public init(_ value: RFC_5322.Header.Name) {
-        self = Self(decoding: [UInt8](value), as: UTF8.self)
-    }
-}
+extension RFC_5322.Header.Name: UInt8.ASCII.RawRepresentable {}
 
-// MARK: - RFC 5322 Standard Headers
+extension RFC_5322.Header.Name: CustomStringConvertible {}
 
 extension RFC_5322.Header.Name {
     /// From: header (originator)
-    public static let from: Self = "From"
+    public static let from: Self = .init(__unchecked: (), rawValue: "From")
 
     /// To: header (primary recipients)
-    public static let to: Self = "To"
+    public static let to: Self = .init(__unchecked: (), rawValue: "To")
 
     /// Cc: header (carbon copy recipients)
-    public static let cc: Self = "Cc"
+    public static let cc: Self = .init(__unchecked: (), rawValue: "Cc")
 
     /// Bcc: header (blind carbon copy recipients)
-    public static let bcc: Self = "Bcc"
+    public static let bcc: Self = .init(__unchecked: (), rawValue: "Bcc")
 
     /// Subject: header
-    public static let subject: Self = "Subject"
+    public static let subject: Self = .init(__unchecked: (), rawValue: "Subject")
 
     /// Date: header
-    public static let date: Self = "Date"
+    public static let date: Self = .init(__unchecked: (), rawValue: "Date")
 
     /// Message-ID: header (unique message identifier)
-    public static let messageId: Self = "Message-ID"
+    public static let messageId: Self = .init(__unchecked: (), rawValue: "Message-ID")
 
     /// Reply-To: header
-    public static let replyTo: Self = "Reply-To"
+    public static let replyTo: Self = .init(__unchecked: (), rawValue: "Reply-To")
 
     /// Sender: header (actual sender if different from From)
-    public static let sender: Self = "Sender"
+    public static let sender: Self = .init(__unchecked: (), rawValue: "Sender")
 
     /// In-Reply-To: header (message being replied to)
-    public static let inReplyTo: Self = "In-Reply-To"
+    public static let inReplyTo: Self = .init(__unchecked: (), rawValue: "In-Reply-To")
 
     /// References: header (related messages)
-    public static let references: Self = "References"
+    public static let references: Self = .init(__unchecked: (), rawValue: "References")
 
     /// Resent-From: header
-    public static let resentFrom: Self = "Resent-From"
+    public static let resentFrom: Self = .init(__unchecked: (), rawValue: "Resent-From")
 
     /// Resent-To: header
-    public static let resentTo: Self = "Resent-To"
+    public static let resentTo: Self = .init(__unchecked: (), rawValue: "Resent-To")
 
     /// Resent-Date: header
-    public static let resentDate: Self = "Resent-Date"
+    public static let resentDate: Self = .init(__unchecked: (), rawValue: "Resent-Date")
 
     /// Resent-Message-ID: header
-    public static let resentMessageId: Self = "Resent-Message-ID"
+    public static let resentMessageId: Self = .init(__unchecked: (), rawValue: "Resent-Message-ID")
 
     /// Return-Path: header
-    public static let returnPath: Self = "Return-Path"
+    public static let returnPath: Self = .init(__unchecked: (), rawValue: "Return-Path")
 
     /// Received: header (mail transfer path)
-    public static let received: Self = "Received"
+    public static let received: Self = .init(__unchecked: (), rawValue: "Received")
 }
 
-// MARK: - Common Extension Headers
 
 extension RFC_5322.Header.Name {
     /// X-Mailer: header (mail client identification)
-    public static let xMailer: Self = "X-Mailer"
+    public static let xMailer: Self = .init(__unchecked: (), rawValue: "X-Mailer")
 
     /// X-Priority: header (message priority)
-    public static let xPriority: Self = "X-Priority"
+    public static let xPriority: Self = .init(__unchecked: (), rawValue: "X-Priority")
 
     /// List-Unsubscribe: header (mailing list unsubscribe)
-    public static let listUnsubscribe: Self = "List-Unsubscribe"
+    public static let listUnsubscribe: Self = .init(__unchecked: (), rawValue: "List-Unsubscribe")
 
     /// List-ID: header (mailing list identifier)
-    public static let listId: Self = "List-ID"
+    public static let listId: Self = .init(__unchecked: (), rawValue: "List-ID")
 
     /// Precedence: header
-    public static let precedence: Self = "Precedence"
+    public static let precedence: Self = .init(__unchecked: (), rawValue: "Precedence")
 
     /// Auto-Submitted: header
-    public static let autoSubmitted: Self = "Auto-Submitted"
+    public static let autoSubmitted: Self = .init(__unchecked: (), rawValue: "Auto-Submitted")
 }
 
-// MARK: - Apple Mail Headers
 
 extension RFC_5322.Header.Name {
     /// X-Apple-Base-Url: header
-    public static let xAppleBaseUrl: Self = "X-Apple-Base-Url"
+    public static let xAppleBaseUrl: Self = .init(__unchecked: (), rawValue: "X-Apple-Base-Url")
 
     /// X-Universally-Unique-Identifier: header
-    public static let xUniversallyUniqueIdentifier: Self = "X-Universally-Unique-Identifier"
+    public static let xUniversallyUniqueIdentifier: Self = .init(__unchecked: (), rawValue: "X-Universally-Unique-Identifier")
 
     /// X-Apple-Mail-Remote-Attachments: header
-    public static let xAppleMailRemoteAttachments: Self = "X-Apple-Mail-Remote-Attachments"
+    public static let xAppleMailRemoteAttachments: Self = .init(__unchecked: (), rawValue: "X-Apple-Mail-Remote-Attachments")
 
     /// X-Apple-Windows-Friendly: header
-    public static let xAppleWindowsFriendly: Self = "X-Apple-Windows-Friendly"
+    public static let xAppleWindowsFriendly: Self = .init(__unchecked: (), rawValue: "X-Apple-Windows-Friendly")
 
     /// X-Apple-Mail-Signature: header
-    public static let xAppleMailSignature: Self = "X-Apple-Mail-Signature"
+    public static let xAppleMailSignature: Self = .init(__unchecked: (), rawValue: "X-Apple-Mail-Signature")
 
     /// X-Uniform-Type-Identifier: header
-    public static let xUniformTypeIdentifier: Self = "X-Uniform-Type-Identifier"
+    public static let xUniformTypeIdentifier: Self = .init(__unchecked: (), rawValue: "X-Uniform-Type-Identifier")
 }
 
-// MARK: - Name Protocol Conformances
-
-extension RFC_5322.Header.Name: ExpressibleByStringLiteral {
-    /// Creates a header name from a string literal
-    ///
-    /// Allows convenient syntax: `let header: Header.Name = "X-Custom"`
-    public init(stringLiteral value: String) {
-        self.init(value)
-    }
-}
-
-extension RFC_5322.Header.Name: CustomStringConvertible {
-    /// Returns the header field name
-    public var description: String {
-        rawValue
-    }
-}

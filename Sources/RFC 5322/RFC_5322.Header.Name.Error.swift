@@ -1,11 +1,9 @@
 //
-//  File.swift
+//  RFC_5322.Header.Name.Error.swift
 //  swift-rfc-5322
 //
 //  Created by Coen ten Thije Boonkkamp on 24/11/2025.
 //
-
-public import RFC_5322
 
 extension RFC_5322.Header.Name {
     /// Header name-specific error type for typed throws

@@ -30,28 +30,18 @@ extension RFC_5322.Message {
         /// Initialize with pre-formatted Message-ID bytes
         ///
         /// - Parameter value: The Message-ID bytes without angle brackets
-        internal init(unchecked value: [UInt8]) {
-            self.value = value
+        internal init(
+            __unchecked: Void,
+            rawValue: [UInt8]
+        ) {
+            self.value = rawValue
         }
     }
 }
 
-extension RFC_5322.Message.ID {
-    /// Generate a Message-ID for an email address with a unique identifier
-    ///
-    /// - Parameters:
-    ///   - uniqueId: A unique string (timestamp, UUID, etc.)
-    ///   - domain: The domain to use (typically from sender's email)
-    public init(uniqueId: String, domain: RFC_1123.Domain) {
-        var result = [UInt8]()
-        result.append(utf8: uniqueId)
-        result.append(.ascii.at)
-        result.append(utf8: domain.name)
-        self.value = result
-    }
-}
-
-extension RFC_5322.Message.ID {
+extension RFC_5322.Message.ID: UInt8.ASCII.Serializing {
+    public static let serialize: @Sendable (RFC_5322.Message.ID) -> [UInt8] = [UInt8].init
+    
     /// Parses a Message-ID from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
@@ -82,53 +72,59 @@ extension RFC_5322.Message.ID {
     ///
     /// - Parameter bytes: The ASCII byte representation of the Message-ID
     /// - Throws: `RFC_5322.Message.ID.Error` if the bytes are malformed
-    public init(ascii bytes: [UInt8]) throws(Error) {
-        // Remove angle brackets if present
-        var processedBytes = bytes[...]
-        if bytes.first == .ascii.lt && bytes.last == .ascii.gt {
-            processedBytes = bytes.dropFirst().dropLast()
+    public init<Bytes: Collection>(ascii bytes: Bytes, in context: Void) throws(Error)
+    where Bytes.Element == UInt8 {
+        // Track first and last bytes via iteration
+        var firstByte: UInt8?
+        var lastByte: UInt8?
+        var hasAtSign = false
+        var count = 0
+
+        for byte in bytes {
+            if firstByte == nil { firstByte = byte }
+            lastByte = byte
+            count += 1
+            if byte == .ascii.at { hasAtSign = true }
         }
 
+        // Determine if we need to strip angle brackets
+        let stripBrackets = firstByte == .ascii.lt && lastByte == .ascii.gt && count >= 2
+
         // Validate format: must contain @ sign
-        guard processedBytes.contains(.ascii.at) else {
+        guard hasAtSign else {
             let string = String(decoding: bytes, as: UTF8.self)
             throw Error.missingAtSign(string)
         }
 
-        // Validate all characters are valid (printable ASCII, no spaces)
-        for byte in processedBytes {
+        // Build result while validating characters
+        var result = [UInt8]()
+        var isFirst = true
+        var byteCount = 0
+
+        for byte in bytes {
+            byteCount += 1
+
+            // Skip leading '<' if stripping brackets
+            if stripBrackets && isFirst && byte == .ascii.lt {
+                isFirst = false
+                continue
+            }
+            // Skip trailing '>' if stripping brackets
+            if stripBrackets && byteCount == count && byte == .ascii.gt {
+                continue
+            }
+            isFirst = false
+
+            // Validate: printable ASCII, no spaces
             guard byte.ascii.isVisible && byte != .ascii.space else {
                 let string = String(decoding: bytes, as: UTF8.self)
                 throw Error.invalidCharacter(string, byte: byte, reason: "Must be printable ASCII without spaces")
             }
+
+            result.append(byte)
         }
 
-        self.value = Array(processedBytes)
-    }
-}
-
-extension RFC_5322.Message.ID {
-    /// Initialize from string representation (STRING CONVENIENCE)
-    ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// Parsing composes as:
-    /// ```
-    /// String → [UInt8] (UTF-8) → Message.ID
-    /// ```
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let messageId = try RFC_5322.Message.ID("<abc123@example.com>")
-    /// ```
-    ///
-    /// - Parameter string: The string representation of the Message-ID
-    /// - Throws: `RFC_5322.Message.ID.Error` if the string is malformed
-    public init(_ string: some StringProtocol) throws(Error) {
-        try self.init(ascii: Array(string.utf8))
+        self.value = result
     }
 }
 
@@ -179,37 +175,22 @@ extension [UInt8] {
     }
 }
 
-extension StringProtocol {
-    /// String representation of the Message-ID
+extension RFC_5322.Message.ID {
+    /// Generate a Message-ID for an email address with a unique identifier
     ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// String display composes as:
-    /// ```
-    /// Message.ID → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    public init(_ value: RFC_5322.Message.ID) {
-        self = Self(decoding: [UInt8](value), as: UTF8.self)
+    /// - Parameters:
+    ///   - uniqueId: A unique string (timestamp, UUID, etc.)
+    ///   - domain: The domain to use (typically from sender's email)
+    public init(uniqueId: String, domain: RFC_1123.Domain) {
+        var result = [UInt8]()
+        result.append(utf8: uniqueId)
+        result.append(.ascii.at)
+        result.append(utf8: domain.name)
+        self.value = result
     }
 }
 
-extension RFC_5322.Message.ID: CustomStringConvertible {
-    /// String representation of the Message-ID
-    ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// String display composes as:
-    /// ```
-    /// Message.ID → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    public var description: String {
-        String(decoding: [UInt8](self), as: UTF8.self)
-    }
-}
+extension RFC_5322.Message.ID: CustomStringConvertible {}
 
 extension RFC_5322.Message.ID: Codable {
     public func encode(to encoder: any Encoder) throws {
@@ -227,18 +208,6 @@ extension RFC_5322.Message.ID: Codable {
     }
 }
 
-extension RFC_5322.Message.ID: ExpressibleByStringLiteral {
-    /// Creates a Message-ID from a string literal
-    ///
-    /// Note: This uses force-try for convenience with literals.
-    /// Prefer `init(_:)` for runtime strings with error handling.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let id: RFC_5322.Message.ID = "<abc@example.com>"
-    /// ```
-    public init(stringLiteral value: String) {
-        try! self.init(value)
-    }
-}
+extension RFC_5322.Message.ID: ExpressibleByStringLiteral {}
+extension RFC_5322.Message.ID: ExpressibleByFloatLiteral {}
+extension RFC_5322.Message.ID: ExpressibleByIntegerLiteral {}

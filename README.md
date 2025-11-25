@@ -116,7 +116,7 @@ let message = RFC_5322.Message(
     messageId: "<unique-id@example.com>",
     body: "Meeting summary...".data(using: .utf8)!,
     additionalHeaders: [
-        RFC_5322.Header(name: "X-Priority", value: "1"),
+        RFC_5322.Header(name: .xPriority, value: 1),
         RFC_5322.Header(name: .contentType, value: "text/plain; charset=utf-8")
     ]
 )
@@ -198,7 +198,9 @@ public struct Message.ID: Hashable, Sendable {
     public init(from: RFC_5322.EmailAddress, uniqueId: String)
 
     // Canonical transformations
-    public init(ascii bytes: [UInt8]) throws(Error)
+    public init<Bytes: Collection>(ascii bytes: Bytes) throws(Error)
+    where Bytes.Element == UInt8
+    
     public init(_ string: some StringProtocol) throws(Error)
 }
 

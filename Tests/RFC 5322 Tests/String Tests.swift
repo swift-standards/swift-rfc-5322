@@ -125,16 +125,16 @@ struct `String Tests` {
     // MARK: - Header to String
 
     @Test
-    func `Convert header to string`() {
-        let header = RFC_5322.Header(name: .subject, value: "Hello World")
+    func `Convert header to string`() throws {
+        let header = try RFC_5322.Header(name: .subject, value: .init("Hello World"))
         let string = String(decoding: [UInt8](header), as: UTF8.self)
 
         #expect(string == "Subject: Hello World")
     }
 
     @Test
-    func `Header string format`() {
-        let header = RFC_5322.Header(name: "X-Test", value: "test value")
+    func `Header string format`() throws {
+        let header = try RFC_5322.Header(name: .init("X-Test"), value: .init("test value"))
         let string = String(decoding: [UInt8](header), as: UTF8.self)
 
         #expect(string == "X-Test: test value")

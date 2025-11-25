@@ -34,7 +34,9 @@ extension RFC_5322 {
 }
 
 
-extension RFC_5322.EmailAddress {
+extension RFC_5322.EmailAddress: UInt8.ASCII.Serializing {
+    public static let serialize: @Sendable (RFC_5322.EmailAddress) -> [UInt8] = [UInt8].init
+    
     /// Parses email address from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
@@ -66,32 +68,64 @@ extension RFC_5322.EmailAddress {
     ///
     /// - Parameter bytes: The ASCII byte representation of the email address
     /// - Throws: `RFC_5322.EmailAddress.Error` if the bytes are malformed
-    public init(ascii bytes: [UInt8]) throws(Error) {
+    public init<Bytes: Collection>(ascii bytes: Bytes, in context: Void) throws(Error)
+    where Bytes.Element == UInt8 {
+        // Delegate to concrete [UInt8] implementation to work around Swift compiler bug
+        // (LinearLifetimeChecker crash with complex generic index types)
+        try self.init(ascii: Array(bytes), in: ())
+    }
+
+    /// Internal initializer for concrete byte array (avoids compiler crash)
+    internal init(ascii bytes: [UInt8], in context: Void) throws(Error) {
+        // Find angle bracket positions
+        var ltOffset: Int?
+        var gtOffset: Int?
+
+        for (i, byte) in bytes.enumerated() {
+            if byte == .ascii.lt && ltOffset == nil {
+                ltOffset = i
+            }
+            if byte == .ascii.gt {
+                gtOffset = i
+            }
+        }
+
         // Look for angle brackets to determine format
-        if let ltIndex = bytes.firstIndex(of: .ascii.lt),
-           let gtIndex = bytes.lastIndex(of: .ascii.gt),
-           ltIndex < gtIndex {
-            
-            // Format: "Display Name <local@domain>" or "Display Name" <local@domain>
-            let displayNameBytes = bytes[..<ltIndex]
-            let emailBytes = bytes[(ltIndex + 1)..<gtIndex]
-            
+        if let ltOff = ltOffset, let gtOff = gtOffset, ltOff < gtOff {
+            // Format: "Display Name <local@domain>"
+            let displayNameBytes = bytes[..<ltOff]
+            let emailBytes = bytes[(ltOff + 1)..<gtOff]
+
             // Parse display name (trim whitespace)
             let displayName: String?
             if !displayNameBytes.isEmpty {
-                let trimmedDisplayName = displayNameBytes.trimming(.ascii.whitespaces)
-                
-                if !trimmedDisplayName.isEmpty {
-                    var nameString = String(decoding: trimmedDisplayName, as: UTF8.self)
-                    
-                    // Handle quoted display names: "Name" -> Name, with escape handling
+                var trimmedBytes = [UInt8]()
+                var foundNonWhitespace = false
+                var trailingWhitespace = [UInt8]()
+
+                for byte in displayNameBytes {
+                    if byte == .ascii.space || byte == .ascii.htab {
+                        if foundNonWhitespace {
+                            trailingWhitespace.append(byte)
+                        }
+                    } else {
+                        foundNonWhitespace = true
+                        trimmedBytes.append(contentsOf: trailingWhitespace)
+                        trailingWhitespace.removeAll()
+                        trimmedBytes.append(byte)
+                    }
+                }
+
+                if !trimmedBytes.isEmpty {
+                    var nameString = String(decoding: trimmedBytes, as: UTF8.self)
+
+                    // Handle quoted display names: "Name" -> Name
                     if nameString.hasPrefix("\"") && nameString.hasSuffix("\"") {
                         nameString = String(nameString.dropFirst().dropLast())
-                        // Handle escape sequences: \" -> ", \\ -> \
                         nameString = nameString.replacing(#"\""#, with: "\"")
                             .replacing(#"\\"#, with: "\\")
                     }
-                    
+
                     displayName = nameString
                 } else {
                     displayName = nil
@@ -99,88 +133,53 @@ extension RFC_5322.EmailAddress {
             } else {
                 displayName = nil
             }
-            
+
             // Parse email part (local@domain)
-            guard let atIndex = emailBytes.firstIndex(of: .ascii.at) else {
+            guard let atIdx = emailBytes.firstIndex(of: .ascii.at) else {
                 throw Error.missingAtSign
             }
-            
-            let localBytes = emailBytes[..<atIndex]
-            let domainBytes = emailBytes[(atIndex + 1)...]
-            
-            // Parse local-part at byte level
-            let localPartValue: LocalPart
-            do {
-                localPartValue = try LocalPart(ascii: Array(localBytes))
-            } catch {
-                throw Error.localPart(error)
-            }
-            
-            // Parse domain at byte level
-            let domainValue: RFC_1123.Domain
-            do {
-                domainValue = try RFC_1123.Domain(ascii: Array(domainBytes))
-            } catch {
-                throw Error.domain(error)
-            }
-            
-            self.init(
-                displayName: displayName,
-                localPart: localPartValue,
-                domain: domainValue
-            )
+
+            let localBytes = Array(emailBytes[..<atIdx])
+            let domainBytes = Array(emailBytes[(atIdx + 1)...])
+
+            // Parse components
+            let localPartValue = try Self.parseLocalPart(localBytes)
+            let domainValue = try Self.parseDomain(domainBytes)
+
+            self.init(displayName: displayName, localPart: localPartValue, domain: domainValue)
         } else {
             // Simple format: local@domain
-            guard let atIndex = bytes.firstIndex(of: .ascii.at) else {
+            guard let atIdx = bytes.firstIndex(of: .ascii.at) else {
                 throw Error.missingAtSign
             }
-            
-            let localBytes = bytes[..<atIndex]
-            let domainBytes = bytes[(atIndex + 1)...]
-            
-            // Parse local-part at byte level
-            let localPartValue: LocalPart
-            do {
-                localPartValue = try LocalPart(ascii: Array(localBytes))
-            } catch {
-                throw Error.localPart(error)
-            }
-            
-            // Parse domain at byte level
-            let domainValue: RFC_1123.Domain
-            do {
-                domainValue = try RFC_1123.Domain(ascii: Array(domainBytes))
-            } catch {
-                throw Error.domain(error)
-            }
-            
-            self.init(
-                displayName: nil,
-                localPart: localPartValue,
-                domain: domainValue
-            )
+
+            let localBytes = Array(bytes[..<atIdx])
+            let domainBytes = Array(bytes[(atIdx + 1)...])
+
+            // Parse components
+            let localPartValue = try Self.parseLocalPart(localBytes)
+            let domainValue = try Self.parseDomain(domainBytes)
+
+            self.init(displayName: nil, localPart: localPartValue, domain: domainValue)
         }
     }
-}
 
-extension RFC_5322.EmailAddress {
-    /// Initialize from string representation ("Name <local@domain>" or "local@domain")
-    ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// Parsing composes as:
-    /// ```
-    /// String → [UInt8] (UTF-8) → EmailAddress
-    /// ```
-    ///
-    /// Uses typed throws for proper error composition:
-    /// - EmailAddress.Error for missing @ sign
-    /// - LocalPart.Error wrapped in EmailAddress.Error.localPart
-    /// - Domain errors wrapped in EmailAddress.Error.domain
-    public init(_ string: some StringProtocol) throws(Error) {
-        try self.init(ascii: Array(string.utf8))
+    /// Helper to parse local part with error wrapping (avoids compiler bug)
+    private static func parseLocalPart(_ bytes: [UInt8]) throws(Error) -> LocalPart {
+        do {
+            return try LocalPart(ascii: bytes)
+        } catch {
+            throw Error.localPart(error)
+        }
+    }
+
+    /// Helper to parse domain with error wrapping (avoids compiler bug)
+    private static func parseDomain(_ bytes: [UInt8]) throws(Error) -> RFC_1123.Domain {
+        do {
+            return try RFC_1123.Domain(ascii: bytes)
+        } catch {
+            throw Error.domain(error)
+        }
     }
 }
 
@@ -262,23 +261,6 @@ extension RFC_5322.EmailAddress {
     }
 }
 
-// MARK: - Protocol Conformances
-extension RFC_5322.EmailAddress: CustomStringConvertible {
-    /// String representation of the email address
-    ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// String display composes as:
-    /// ```
-    /// EmailAddress → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    public var description: String {
-        String(decoding: [UInt8](self), as: UTF8.self)
-    }
-}
-
 extension RFC_5322.EmailAddress: Codable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
@@ -295,20 +277,4 @@ extension RFC_5322.EmailAddress: Codable {
 extension RFC_5322.EmailAddress: RawRepresentable {
     public var rawValue: String { String(self) }
     public init?(rawValue: String) { try? self.init(rawValue) }
-}
-
-extension StringProtocol {
-    /// String representation of an RFC 5322 email address
-    ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// String display composes as:
-    /// ```
-    /// EmailAddress → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    public init(_ emailAddress: RFC_5322.EmailAddress) {
-        self = Self(decoding: [UInt8](emailAddress), as: UTF8.self)
-    }
 }

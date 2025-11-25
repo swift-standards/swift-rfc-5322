@@ -87,19 +87,22 @@ struct `README Verification Tests` {
 
     @Test
     func `README Line 107-122: Advanced message features`() throws {
-        let message = RFC_5322.Message(
-            from: try RFC_5322.EmailAddress("sender@example.com"),
-            to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            cc: [try RFC_5322.EmailAddress("cc@example.com")],
-            bcc: [try RFC_5322.EmailAddress("bcc@example.com")],
-            replyTo: try RFC_5322.EmailAddress("replyto@example.com"),
+        let message = try RFC_5322.Message(
+            from: RFC_5322.EmailAddress("sender@example.com"),
+            to: [RFC_5322.EmailAddress("recipient@example.com")],
+            cc: [RFC_5322.EmailAddress("cc@example.com")],
+            bcc: [RFC_5322.EmailAddress("bcc@example.com")],
+            replyTo: RFC_5322.EmailAddress("replyto@example.com"),
             date: RFC_5322.DateTime(secondsSinceEpoch: 1609459200),
             subject: "Meeting Notes",
             messageId: "<unique-id@example.com>",
             body: Array("Meeting summary...".utf8),
             additionalHeaders: [
-                RFC_5322.Header(name: RFC_5322.Header.Name("X-Priority"), value: "1"),
-                RFC_5322.Header(name: RFC_5322.Header.Name("X-Mailer"), value: "Custom Mailer"),
+                RFC_5322.Header(name: .xPriority, value: 1),
+                RFC_5322.Header(
+                    name: .init("X-Mailer"),
+                    value: .init("Custom Mailer")
+                )
             ]
         )
 

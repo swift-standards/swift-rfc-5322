@@ -50,11 +50,11 @@ extension RFC_5322 {
     }
 }
 
-
-
 // MARK: - Header Parsing
 
-extension RFC_5322.Header {
+extension RFC_5322.Header: UInt8.ASCII.Serializing {
+    public static let serialize: @Sendable (RFC_5322.Header) -> [UInt8] = [UInt8].init
+    
     /// Parses a header from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
@@ -80,7 +80,8 @@ extension RFC_5322.Header {
     ///
     /// - Parameter bytes: The ASCII byte representation of the header
     /// - Throws: `RFC_5322.Header.Error` if the bytes are malformed
-    public init(ascii bytes: [UInt8]) throws(Error) {
+    public init<Bytes: Collection>(ascii bytes: Bytes, in context: Void) throws(Error)
+    where Bytes.Element == UInt8 {
         // Split on first colon to separate name from value
         guard let colonIndex = bytes.firstIndex(of: .ascii.colon) else {
             let string = String(decoding: bytes, as: UTF8.self)
@@ -88,7 +89,8 @@ extension RFC_5322.Header {
         }
 
         let nameBytes = bytes[..<colonIndex]
-        let valueBytes = bytes[(colonIndex + 1)...]
+        let valueStartIndex = bytes.index(after: colonIndex)
+        let valueBytes = bytes[valueStartIndex...]
 
         // Parse name and value through their byte-level initializers
         // Wrap their errors in Header.Error for typed throws
@@ -102,37 +104,12 @@ extension RFC_5322.Header {
         let value: RFC_5322.Header.Value
         do {
             value = try RFC_5322.Header.Value(ascii: Array(valueBytes))
-        } catch  {
+        } catch {
             throw Error.invalidValue(error)
         }
 
         // Use memberwise initializer
         self.init(name: name, value: value)
-    }
-}
-
-extension RFC_5322.Header {
-    /// Initialize from string representation (STRING CONVENIENCE)
-    ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// Parsing composes as:
-    /// ```
-    /// String → [UInt8] (UTF-8) → Header
-    /// ```
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let header = try RFC_5322.Header("Content-Type: text/html")
-    /// ```
-    ///
-    /// - Parameter string: The string representation of the header
-    /// - Throws: `RFC_5322.Header.Error` if the string is malformed
-    public init(_ string: some StringProtocol) throws(Error) {
-        try self.init(ascii: Array(string.utf8))
     }
 }
 
@@ -151,21 +128,7 @@ extension [UInt8] {
 
 // MARK: - Header Protocol Conformances
 
-extension RFC_5322.Header: CustomStringConvertible {
-    /// Returns the header in RFC 5322 format via byte composition
-    ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// String display composes as:
-    /// ```
-    /// Header → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    public var description: String {
-        String(decoding: [UInt8](self), as: UTF8.self)
-    }
-}
+extension RFC_5322.Header: CustomStringConvertible {}
 
 // MARK: - Array Convenience Extensions
 
@@ -190,11 +153,11 @@ extension Array where Element == RFC_5322.Header {
         }
         set {
             removeAll(where: { $0.name == name })
-            if let newValue = newValue {
+            if let newValue = try? newValue.map({ try RFC_5322.Header.Value($0) }) {
                 append(
                     RFC_5322.Header(
                         name: name,
-                        value: .init(newValue)
+                        value: newValue
                     )
                 )
             }

@@ -44,7 +44,9 @@ extension RFC_5322 {
     public typealias Date = RFC_5322.DateTime
 }
 
-extension RFC_5322.DateTime {
+extension RFC_5322.DateTime: UInt8.ASCII.Serializing {
+    public static let serialize: @Sendable (RFC_5322.DateTime) -> [UInt8] = [UInt8].init
+    
     /// Parses RFC 5322 date-time from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
@@ -75,7 +77,8 @@ extension RFC_5322.DateTime {
     ///
     /// - Parameter bytes: The ASCII byte representation of the date-time
     /// - Throws: `RFC_5322.DateTime.Error` if the bytes are malformed
-    public init(ascii bytes: [UInt8]) throws(Error) {
+    public init<Bytes: Collection>(ascii bytes: Bytes, in context: Void) throws(Error)
+    where Bytes.Element == UInt8 {
         // Split on spaces at byte level
         var parts: [[UInt8]] = []
         var currentPart: [UInt8] = []
@@ -239,31 +242,6 @@ extension RFC_5322.DateTime {
     }
 }
 
-extension RFC_5322.DateTime {
-    /// Creates a date-time by parsing an RFC 5322 date-time string
-    ///
-    /// This initializer provides a Swift-native parsing interface without protocol dependencies.
-    ///
-    /// ## Category Theory
-    ///
-    /// Parsing composes through canonical byte representation:
-    /// ```
-    /// String → [UInt8] (UTF-8) → DateTime
-    /// ```
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let dt = try RFC_5322.DateTime(parsing: "Mon, 01 Jan 2024 12:00:00 +0000")
-    /// ```
-    ///
-    /// - Parameter string: The RFC 5322 date-time string to parse
-    /// - Throws: `RFC_5322.DateTime.Error` if parsing fails
-    public init(_ string: some StringProtocol) throws(Error) {
-        try self.init(ascii: Array(string.utf8))
-    }
-}
-
 extension [UInt8] {
     /// Creates RFC 5322 formatted date-time bytes (CANONICAL SERIALIZATION)
     ///
@@ -352,6 +330,8 @@ extension [UInt8] {
     }
 }
 
+extension RFC_5322.DateTime: CustomStringConvertible {}
+
 extension RFC_5322.DateTime {
     /// Create a date-time from seconds since epoch
     /// - Parameters:
@@ -361,7 +341,9 @@ extension RFC_5322.DateTime {
         self.time = Time(secondsSinceEpoch: secondsSinceEpoch)
         self.timezoneOffset = Time.TimezoneOffset(seconds: timezoneOffsetSeconds)
     }
-    
+}
+
+extension RFC_5322.DateTime {
     /// Create a date-time from components with validation
     /// - Parameters:
     ///   - year: Year
@@ -484,15 +466,6 @@ extension RFC_5322.DateTime {
     /// These are protocol-mandated values and must not be localized
     public static let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 }
-
-extension StringProtocol {
-    public init(_ dateTime: RFC_5322.DateTime) {
-        self = Self(decoding: [UInt8](dateTime), as: UTF8.self)
-    }
-}
-
-// MARK: - Swift-Native Parsing
-
 
 
 // MARK: - Compositional Operations (Swifty monoid/functor-like behavior)
@@ -636,18 +609,4 @@ extension RFC_5322.DateTime: Codable {
 
 // MARK: - CustomStringConvertible
 
-extension RFC_5322.DateTime: CustomStringConvertible {
-    /// String representation of the date-time
-    ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// String display composes as:
-    /// ```
-    /// DateTime → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    public var description: String {
-        String(decoding: [UInt8](self), as: UTF8.self)
-    }
-}
+

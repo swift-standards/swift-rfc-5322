@@ -47,18 +47,18 @@ extension PerformanceTests {
 
         @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(750)))
         func `render message with all optional fields`() throws {
-            let message = RFC_5322.Message(
-                from: try RFC_5322.EmailAddress("sender@example.com"),
-                to: [try RFC_5322.EmailAddress("recipient@example.com")],
-                cc: [try RFC_5322.EmailAddress("cc@example.com")],
-                bcc: [try RFC_5322.EmailAddress("bcc@example.com")],
-                replyTo: try RFC_5322.EmailAddress("replyto@example.com"),
+            let message = try RFC_5322.Message(
+                from: RFC_5322.EmailAddress("sender@example.com"),
+                to: [RFC_5322.EmailAddress("recipient@example.com")],
+                cc: [RFC_5322.EmailAddress("cc@example.com")],
+                bcc: [RFC_5322.EmailAddress("bcc@example.com")],
+                replyTo: RFC_5322.EmailAddress("replyto@example.com"),
                 date: .init(secondsSinceEpoch: 0),
                 subject: "Full Message",
                 messageId: "<full@example.com>",
                 body: Array("Test body".utf8),
                 additionalHeaders: [
-                    RFC_5322.Header(name: "X-Priority", value: "1")
+                    RFC_5322.Header(name: .xPriority, value: 1)
                 ]
             )
             _ = String(message)

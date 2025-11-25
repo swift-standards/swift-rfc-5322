@@ -60,8 +60,8 @@ struct `[UInt8] Conversions Tests` {
     // MARK: - Header to [UInt8]
 
     @Test
-    func `Convert header to bytes`() {
-        let header = RFC_5322.Header(name: .subject, value: "Hello World")
+    func `Convert header to bytes`() throws {
+        let header = try RFC_5322.Header(name: .subject, value: .init("Hello World"))
         let bytes = [UInt8](header)
         let string = String(decoding: bytes, as: UTF8.self)
 
@@ -69,8 +69,8 @@ struct `[UInt8] Conversions Tests` {
     }
 
     @Test
-    func `Convert custom header to bytes`() {
-        let header = RFC_5322.Header(name: "X-Custom", value: "custom value")
+    func `Convert custom header to bytes`() throws {
+        let header = try RFC_5322.Header(name: .init("X-Custom"), value: .init("custom value"))
         let bytes = [UInt8].init(header)
         let string = String(decoding: bytes, as: UTF8.self)
 
@@ -78,8 +78,8 @@ struct `[UInt8] Conversions Tests` {
     }
 
     @Test
-    func `Header bytes contain colon and space`() {
-        let header = RFC_5322.Header(name: "X-Test", value: "value")
+    func `Header bytes contain colon and space`() throws {
+        let header = try RFC_5322.Header(name: .init("X-Test"), value: .init("value"))
         let bytes = [UInt8](header)
 
         // Debug: print actual bytes
@@ -249,15 +249,15 @@ struct `[UInt8] Conversions Tests` {
 
     @Test
     func `Message bytes include additional headers`() throws {
-        let message = RFC_5322.Message(
-            from: try RFC_5322.EmailAddress("sender@example.com"),
-            to: [try RFC_5322.EmailAddress("recipient@example.com")],
+        let message = try RFC_5322.Message(
+            from: RFC_5322.EmailAddress("sender@example.com"),
+            to: [RFC_5322.EmailAddress("recipient@example.com")],
             date: .init(secondsSinceEpoch: 0),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array("Test".utf8),
             additionalHeaders: [
-                RFC_5322.Header(name: "X-Priority", value: "1")
+                RFC_5322.Header(name: .init("X-Priority"), value: 1)
             ]
         )
 

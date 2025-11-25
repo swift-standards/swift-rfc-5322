@@ -109,7 +109,10 @@ extension RFC_5322 {
     }
 }
 
-extension RFC_5322.Message {
+extension RFC_5322.Message: UInt8.ASCII.Serializing {
+    public static let serialize: @Sendable (RFC_5322.Message) -> [UInt8] = [UInt8].init
+    
+    
     /// Parses an RFC 5322 message from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// **FUTURE TASK**: This is the canonical primitive parser for RFC 5322 messages.
@@ -156,7 +159,8 @@ extension RFC_5322.Message {
     ///
     /// - Parameter bytes: The ASCII byte representation of an RFC 5322 message
     /// - Throws: `RFC_5322.Message.Error` if the bytes are malformed
-    public init(ascii bytes: [UInt8]) throws(Error) {
+    public init<Bytes: Collection>(ascii bytes: Bytes, in context: Void) throws(Error)
+    where Bytes.Element == UInt8 {
         // TODO: Implement RFC 5322 message parsing
         // This is a complex parser that must handle:
         // - Header/body separation
@@ -168,31 +172,6 @@ extension RFC_5322.Message {
         // - Various encoding schemes
 
         fatalError("RFC 5322 Message parsing not yet implemented")
-    }
-}
-
-extension RFC_5322.Message {
-    /// Initialize from string representation (STRING CONVENIENCE)
-    ///
-    /// **FUTURE TASK**: Composes through canonical byte representation.
-    ///
-    /// ## Category Theory
-    ///
-    /// Parsing composes as:
-    /// ```
-    /// String → [UInt8] (UTF-8) → Message
-    /// ```
-    ///
-    /// ## Example (Future)
-    ///
-    /// ```swift
-    /// let message = try RFC_5322.Message(emlFileContents)
-    /// ```
-    ///
-    /// - Parameter string: The string representation of an RFC 5322 message
-    /// - Throws: `RFC_5322.Message.Error` if the string is malformed
-    public init(_ string: some StringProtocol) throws(Error) {
-        try self.init(ascii: Array(string.utf8))
     }
 }
 
@@ -236,7 +215,7 @@ extension [UInt8] {
         result.append(contentsOf: [UInt8].toPrefix)
         var first = true
         for address in message.to {
-            if !first { result.append(contentsOf: [UInt8].comma) }
+            if !first { result.append(contentsOf: [.ascii.comma, .ascii.space]) }
             first = false
             result.append(contentsOf: [UInt8](address))
         }
@@ -247,7 +226,7 @@ extension [UInt8] {
             result.append(contentsOf: [UInt8].ccPrefix)
             first = true
             for address in cc {
-                if !first { result.append(contentsOf: [UInt8].comma) }
+                if !first { result.append(contentsOf: [.ascii.comma, .ascii.space]) }
                 first = false
                 result.append(contentsOf: [UInt8](address))
             }
@@ -297,36 +276,6 @@ extension [UInt8] {
     }
 }
 
-extension StringProtocol {
-    /// String representation of the Message-ID
-    ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// String display composes as:
-    /// ```
-    /// Message.ID → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    public init(_ value: RFC_5322.Message) {
-        self = Self(decoding: [UInt8](value), as: UTF8.self)
-    }
-}
-
-extension RFC_5322.Message: CustomStringConvertible {
-    /// String representation of the RFC 5322 message
-    ///
-    /// Composes through canonical byte representation for academic correctness.
-    ///
-    /// ## Category Theory
-    ///
-    /// String display composes as:
-    /// ```
-    /// Message → [UInt8] (RFC 5322 format) → String (UTF-8 interpretation)
-    /// ```
-    public var description: String {
-        String(decoding: [UInt8](self), as: UTF8.self)
-    }
-}
+extension RFC_5322.Message: CustomStringConvertible {}
 
 

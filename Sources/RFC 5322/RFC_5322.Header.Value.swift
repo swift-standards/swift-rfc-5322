@@ -73,32 +73,34 @@ extension RFC_5322.Header.Value: UInt8.ASCII.Serializing {
     ///
     /// - Parameter bytes: The ASCII byte representation of the header value
     /// - Throws: `RFC_5322.Header.Value.Error` if the bytes contain invalid characters or improper folding
-    public init(ascii bytes: [UInt8]) throws(Error) {
+    public init<Bytes: Collection>(ascii bytes: Bytes, in context: Void) throws(Error)
+    where Bytes.Element == UInt8 {
         // RFC 5322 Section 2.2.3: Unfolding
         // "Unfolding is accomplished by simply removing any CRLF
         // that is immediately followed by WSP"
 
-        // Step 1: Unfold and validate folding patterns
+        // Step 1: Unfold and validate folding patterns using Collection index traversal
         var unfolded = [UInt8]()
-        var i = 0
+        var index = bytes.startIndex
 
-        while i < bytes.count {
-            let byte = bytes[i]
+        while index != bytes.endIndex {
+            let byte = bytes[index]
 
             // Check for CR
             if byte == .ascii.cr {
+                let nextIndex = bytes.index(after: index)
                 // Must be followed by LF (CRLF sequence)
-                guard i + 1 < bytes.count, bytes[i + 1] == .ascii.lf else {
+                guard nextIndex != bytes.endIndex, bytes[nextIndex] == .ascii.lf else {
                     let string = String(decoding: bytes, as: UTF8.self)
                     throw Error.invalidCharacter(string, byte: byte, reason: "CR must be followed by LF")
                 }
 
+                let afterLFIndex = bytes.index(after: nextIndex)
                 // CRLF found - check if it's followed by WSP (folding)
-                if i + 2 < bytes.count,
-                   (bytes[i + 2] == .ascii.sp || bytes[i + 2] == .ascii.htab) {
+                if afterLFIndex != bytes.endIndex,
+                   (bytes[afterLFIndex] == .ascii.sp || bytes[afterLFIndex] == .ascii.htab) {
                     // Valid folding: skip CRLF, keep the WSP
-                    i += 2  // Skip CR and LF
-                    // Continue to add the WSP in next iteration
+                    index = afterLFIndex  // Move to WSP, will be added in next iteration
                 } else {
                     // CRLF not followed by WSP - invalid
                     let string = String(decoding: bytes, as: UTF8.self)
@@ -110,20 +112,25 @@ extension RFC_5322.Header.Value: UInt8.ASCII.Serializing {
                 throw Error.invalidCharacter(string, byte: byte, reason: "LF must be preceded by CR")
             } else {
                 unfolded.append(byte)
-                i += 1
+                index = bytes.index(after: index)
             }
         }
 
-        // Step 2: Validate characters in unfolded value
+        // Step 2: Strip leading OWS (optional whitespace)
+        // RFC 5322 Section 3.2.2: The space after the colon is formatting, not semantic content
+        // OWS = *(SP / HTAB)
+        let trimmed = Array(unfolded.drop(while: { $0 == .ascii.sp || $0 == .ascii.htab }))
+
+        // Step 3: Validate characters in trimmed value
         // RFC 5322 Section 2.2: Field body "may be composed of printable
         // US-ASCII characters as well as the space (SP, ASCII value 32)
         // and horizontal tab (HTAB, ASCII value 9) characters"
-        for byte in unfolded {
+        for byte in trimmed {
             // Valid: printable ASCII (0x20-0x7E) OR HTAB (0x09)
             let valid = byte.ascii.isPrintable || byte == .ascii.htab
 
             guard valid else {
-                let string = String(decoding: unfolded, as: UTF8.self)
+                let string = String(decoding: trimmed, as: UTF8.self)
                 let reason: String
                 if byte.ascii.isControl {
                     reason = "Control characters not allowed (except HTAB)"
@@ -136,7 +143,7 @@ extension RFC_5322.Header.Value: UInt8.ASCII.Serializing {
 
         self.init(
             __unchecked: (),
-            rawValue: String(decoding: unfolded, as: UTF8.self)
+            rawValue: String(decoding: trimmed, as: UTF8.self)
         )
     }
 }
@@ -172,7 +179,7 @@ extension [UInt8] {
     }
 }
 
-extension RFC_5322.Header.Value: RawRepresentable {}
+extension RFC_5322.Header.Value: UInt8.ASCII.RawRepresentable {}
 
 extension RFC_5322.Header.Value: CustomStringConvertible {}
 
