@@ -5,8 +5,9 @@
 //  Performance tests for RFC_5322.Message
 //
 
-import Testing
 import StandardsTestSupport
+import Testing
+
 @testable import RFC_5322
 
 extension PerformanceTests {
@@ -35,7 +36,7 @@ extension PerformanceTests {
                 to: [
                     try RFC_5322.EmailAddress("alice@example.com"),
                     try RFC_5322.EmailAddress("bob@example.com"),
-                    try RFC_5322.EmailAddress("charlie@example.com")
+                    try RFC_5322.EmailAddress("charlie@example.com"),
                 ],
                 date: .init(secondsSinceEpoch: 0),
                 subject: "Group Message",
@@ -111,6 +112,7 @@ extension PerformanceTests {
 
         @Test(
             .timed(iterations: 10000, warmup: 1000, threshold: .microseconds(100)),
+            // swiftlint:disable:next force_try
             arguments: [try! RFC_5322.EmailAddress("sender@example.com")]
         )
         func `generate message ID`(from: RFC_5322.EmailAddress) throws {

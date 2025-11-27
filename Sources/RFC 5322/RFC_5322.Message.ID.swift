@@ -26,7 +26,7 @@ extension RFC_5322.Message {
         /// The unique identifier bytes (without angle brackets)
         /// Stored in format: "unique-string@domain" as ASCII bytes
         package let value: [UInt8]
-        
+
         /// Initialize with pre-formatted Message-ID bytes
         ///
         /// - Parameter value: The Message-ID bytes without angle brackets
@@ -41,7 +41,7 @@ extension RFC_5322.Message {
 
 extension RFC_5322.Message.ID: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (RFC_5322.Message.ID) -> [UInt8] = [UInt8].init
-    
+
     /// Parses a Message-ID from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
@@ -118,7 +118,11 @@ extension RFC_5322.Message.ID: UInt8.ASCII.Serializable {
             // Validate: printable ASCII, no spaces
             guard byte.ascii.isVisible && byte != .ascii.space else {
                 let string = String(decoding: bytes, as: UTF8.self)
-                throw Error.invalidCharacter(string, byte: byte, reason: "Must be printable ASCII without spaces")
+                throw Error.invalidCharacter(
+                    string,
+                    byte: byte,
+                    reason: "Must be printable ASCII without spaces"
+                )
             }
 
             result.append(byte)
@@ -164,7 +168,7 @@ extension [UInt8] {
     /// - Parameter messageId: The Message-ID to serialize
     public init(_ messageId: RFC_5322.Message.ID) {
         var result = [UInt8]()
-        result.reserveCapacity(messageId.value.count + 2) // +2 for angle brackets
+        result.reserveCapacity(messageId.value.count + 2)  // +2 for angle brackets
 
         // Always include angle brackets per RFC 5322
         result.append(.ascii.lt)

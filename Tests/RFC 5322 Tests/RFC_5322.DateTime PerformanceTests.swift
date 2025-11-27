@@ -5,8 +5,9 @@
 //  Performance tests for RFC_5322.DateTime
 //
 
-import Testing
 import StandardsTestSupport
+import Testing
+
 @testable import RFC_5322
 
 extension PerformanceTests {
@@ -17,7 +18,7 @@ extension PerformanceTests {
 
         @Test(.timed(iterations: 10000, warmup: 1000, threshold: .microseconds(90)))
         func `create from epoch`() {
-            _ = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+            _ = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
         }
 
         @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(90)))
@@ -36,14 +37,14 @@ extension PerformanceTests {
 
         @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(100), metric: .median))
         func `extract components from UTC datetime`() {
-            let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+            let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
             _ = dateTime.components
         }
 
         @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(100), metric: .median))
         func `extract components with timezone offset`() {
             let dateTime = RFC_5322.DateTime(
-                secondsSinceEpoch: 1609459200,
+                secondsSinceEpoch: 1_609_459_200,
                 timezoneOffsetSeconds: 3600
             )
             _ = dateTime.components
@@ -123,8 +124,8 @@ extension PerformanceTests {
 
         @Test(.timed(iterations: 10000, warmup: 1000, threshold: .microseconds(95)))
         func `check datetime equality`() {
-            let dt1 = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
-            let dt2 = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+            let dt1 = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
+            let dt2 = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
             _ = dt1 == dt2
         }
     }

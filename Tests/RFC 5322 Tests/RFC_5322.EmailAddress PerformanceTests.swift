@@ -5,12 +5,13 @@
 //  Performance tests for RFC_5322.EmailAddress
 //
 
-import Testing
 import StandardsTestSupport
+import Testing
+
 @testable import RFC_5322
 
 extension PerformanceTests {
-    @Suite(.serialized)
+    @Suite
     struct `RFC_5322.EmailAddress` {
 
         // MARK: - Parsing Performance

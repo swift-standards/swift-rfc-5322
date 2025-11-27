@@ -16,38 +16,38 @@ struct `Foundation Date Formatting` {
     @Test
     func `Format Foundation.Date as RFC 5322`() throws {
         // January 1, 2021 00:00:00 UTC
-        let date = Date(timeIntervalSince1970: 1609459200)
+        let date = Date(timeIntervalSince1970: 1_609_459_200)
 
         let formatted = date.formatted(.rfc5322)
 
         // Should be a valid RFC 5322 date-time string
         #expect(formatted.contains("Fri"))  // Day name
-        #expect(formatted.contains("01"))   // Day
+        #expect(formatted.contains("01"))  // Day
         #expect(formatted.contains("Jan"))  // Month
-        #expect(formatted.contains("2021")) // Year
-        #expect(formatted.contains("+0000")) // UTC timezone
+        #expect(formatted.contains("2021"))  // Year
+        #expect(formatted.contains("+0000"))  // UTC timezone
     }
 
     @Test
     func `Format Foundation.Date with custom timezone`() throws {
         // January 1, 2021 00:00:00 UTC
-        let date = Date(timeIntervalSince1970: 1609459200)
+        let date = Date(timeIntervalSince1970: 1_609_459_200)
 
         // Format with EST timezone (-0500)
         let formatted = date.formatted(.rfc5322(timezoneOffsetSeconds: -18000))
 
         #expect(formatted.contains("Thu"))  // One day earlier
-        #expect(formatted.contains("31"))   // 31st
+        #expect(formatted.contains("31"))  // 31st
         #expect(formatted.contains("Dec"))  // December
-        #expect(formatted.contains("2020")) // 2020
-        #expect(formatted.contains("-0500")) // EST timezone
+        #expect(formatted.contains("2020"))  // 2020
+        #expect(formatted.contains("-0500"))  // EST timezone
     }
 
     @Test
     func `Parse RFC 5322 string to Foundation.Date`() throws {
         let parsed = try Date("Fri, 01 Jan 2021 00:00:00 +0000", strategy: .rfc5322)
 
-        #expect(parsed.timeIntervalSince1970 == 1609459200)
+        #expect(parsed.timeIntervalSince1970 == 1_609_459_200)
     }
 }
 
@@ -56,33 +56,33 @@ struct `RFC 5322 DateTime with Foundation Formatting` {
 
     @Test
     func `Convert RFC 5322 DateTime to Foundation.Date`() throws {
-        let dt = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+        let dt = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
         let foundationDate = dt.foundationDate
 
-        #expect(foundationDate.timeIntervalSince1970 == 1609459200)
+        #expect(foundationDate.timeIntervalSince1970 == 1_609_459_200)
     }
 
     @Test
     func `Convert Foundation.Date to RFC 5322 DateTime`() throws {
-        let date = Date(timeIntervalSince1970: 1609459200)
+        let date = Date(timeIntervalSince1970: 1_609_459_200)
         let dt = RFC_5322.DateTime(foundationDate: date)
 
-        #expect(dt.secondsSinceEpoch == 1609459200)
+        #expect(dt.secondsSinceEpoch == 1_609_459_200)
         #expect(dt.timezoneOffsetSeconds == 0)
     }
 
     @Test
     func `Convert with custom timezone`() throws {
-        let date = Date(timeIntervalSince1970: 1609459200)
+        let date = Date(timeIntervalSince1970: 1_609_459_200)
         let dt = RFC_5322.DateTime(foundationDate: date, timezoneOffsetSeconds: -18000)
 
-        #expect(dt.secondsSinceEpoch == 1609459200)
+        #expect(dt.secondsSinceEpoch == 1_609_459_200)
         #expect(dt.timezoneOffsetSeconds == -18000)
     }
 
     @Test
     func `Format RFC 5322 DateTime using ISO 8601`() throws {
-        let dt = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+        let dt = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
         let formatted = dt.formatted(Date.ISO8601FormatStyle())
 
         // ISO 8601 format
@@ -135,6 +135,9 @@ struct `RFC 5322 DateTime with Foundation Formatting` {
         #expect(formatted.contains("21"))
         #expect(formatted.contains("45"))
         // Verify some hour is present (formatted in local timezone)
-        #expect(formatted.range(of: #"\d{1,2}:\d{2}|at \d{1,2}:\d{2}"#, options: .regularExpression) != nil)
+        #expect(
+            formatted.range(of: #"\d{1,2}:\d{2}|at \d{1,2}:\d{2}"#, options: .regularExpression)
+                != nil
+        )
     }
 }

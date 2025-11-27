@@ -5,7 +5,6 @@
 //  Created by Coen ten Thije Boonkkamp on 24/11/2025.
 //
 
-
 // MARK: - Header Error Type
 
 extension RFC_5322.EmailAddress.LocalPart {

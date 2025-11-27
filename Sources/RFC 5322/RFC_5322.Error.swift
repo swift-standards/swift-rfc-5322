@@ -43,7 +43,8 @@ extension RFC_5322 {
             case .dateTime(let error): return String(describing: error)
             case .emailAddress(let error): return String(describing: error)
             case .invalidFormat(let message): return message
-            case .invalidFieldName(let name, let reason): return "Invalid field name '\(name)': \(reason)"
+            case .invalidFieldName(let name, let reason):
+                return "Invalid field name '\(name)': \(reason)"
             }
         }
     }

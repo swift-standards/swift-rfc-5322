@@ -5,8 +5,9 @@
 //  Tests for RFC_5322.Header including creation, validation, and array extensions
 //
 
-import Testing
 import INCITS_4_1986
+import Testing
+
 @testable import RFC_5322
 
 @Suite
@@ -24,7 +25,10 @@ struct `RFC_5322.Header Tests` {
 
     @Test
     func `Create header with custom name`() throws {
-        let header = try RFC_5322.Header(name: .init("X-Custom-Header"), value: .init("custom value"))
+        let header = try RFC_5322.Header(
+            name: .init("X-Custom-Header"),
+            value: .init("custom value")
+        )
 
         #expect(header.name.rawValue == "X-Custom-Header")
         #expect(header.value == "custom value")
@@ -131,14 +135,14 @@ struct `RFC_5322.Header Tests` {
         headers.append(try RFC_5322.Header(name: .subject, value: .init("text/plain")))
         headers[.subject] = nil
 
-        #expect(headers.count == 0)
+        #expect(headers.isEmpty)
     }
 
     @Test
     func `Array subscript removes all headers with same name`() throws {
         var headers = [RFC_5322.Header]()
         headers.append(try RFC_5322.Header(name: .received, value: .init("server1")))
-                       headers.append(try RFC_5322.Header(name: .received, value: .init("server2")))
+        headers.append(try RFC_5322.Header(name: .received, value: .init("server2")))
         headers[.received] = "server3"
 
         // Should remove both old headers and add one new one
@@ -152,8 +156,8 @@ struct `RFC_5322.Header Tests` {
     func `Array all() returns multiple headers with same name`() throws {
         var headers = [RFC_5322.Header]()
         headers.append(try RFC_5322.Header(name: .received, value: .init("server1")))
-                       headers.append(try RFC_5322.Header(name: .received, value: .init("server2")))
-                                      headers.append(try RFC_5322.Header(name: .subject, value: .init("text/plain")))
+        headers.append(try RFC_5322.Header(name: .received, value: .init("server2")))
+        headers.append(try RFC_5322.Header(name: .subject, value: .init("text/plain")))
 
         let received = headers.all(.received)
 
@@ -167,7 +171,7 @@ struct `RFC_5322.Header Tests` {
         let headers = [RFC_5322.Header]()
         let received = headers.all(.received)
 
-        #expect(received.count == 0)
+        #expect(received.isEmpty)
     }
 
     // MARK: - Array Extensions - values(for:)
@@ -176,7 +180,7 @@ struct `RFC_5322.Header Tests` {
     func `Array values(for:) returns header values`() throws {
         var headers = [RFC_5322.Header]()
         headers.append(try RFC_5322.Header(name: .received, value: .init("server1")))
-                       headers.append(try RFC_5322.Header(name: .received, value: .init("server2")))
+        headers.append(try RFC_5322.Header(name: .received, value: .init("server2")))
 
         let values = headers.values(for: .received)
 
@@ -192,7 +196,7 @@ struct `RFC_5322.Header Tests` {
         let headers: [RFC_5322.Header] = try [
             .from: .init("sender@example.com"),
             .to: .init("recipient@example.com"),
-            .subject: .init("Test")
+            .subject: .init("Test"),
         ]
 
         #expect(headers.count == 3)

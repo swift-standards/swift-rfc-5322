@@ -19,13 +19,14 @@ extension RFC_5322.EmailAddress.LocalPart {
     // swiftlint:disable:next nesting
     package enum Storage: Hashable {
         case dotAtom([UInt8])  // Regular unquoted format (ASCII bytes)
-        case quoted([UInt8])   // Quoted string format (ASCII bytes)
+        case quoted([UInt8])  // Quoted string format (ASCII bytes)
     }
 }
 
 extension RFC_5322.EmailAddress.LocalPart: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (RFC_5322.EmailAddress.LocalPart) -> [UInt8] = [UInt8].init
-    
+    public static let serialize: @Sendable (RFC_5322.EmailAddress.LocalPart) -> [UInt8] = [UInt8]
+        .init
+
     /// Parses a local-part from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
@@ -84,7 +85,10 @@ extension RFC_5322.EmailAddress.LocalPart: UInt8.ASCII.Serializable {
             for byte in bytes {
                 byteCount += 1
                 // Skip first and last quotes
-                if isFirst { isFirst = false; continue }
+                if isFirst {
+                    isFirst = false
+                    continue
+                }
                 if byteCount == count { continue }
 
                 if skipNext {
@@ -125,10 +129,9 @@ extension RFC_5322.EmailAddress.LocalPart: UInt8.ASCII.Serializable {
                 previousByte = byte
 
                 // Validate character
-                let isValid = byte.ascii.isLetter ||
-                    byte.ascii.isDigit ||
-                    byte == .ascii.period ||
-                    "!#$%&'*+-/=?^_`{|}~".utf8.contains(byte)
+                let isValid =
+                    byte.ascii.isLetter || byte.ascii.isDigit || byte == .ascii.period
+                    || "!#$%&'*+-/=?^_`{|}~".utf8.contains(byte)
                 guard isValid else {
                     throw Error.invalidDotAtom
                 }

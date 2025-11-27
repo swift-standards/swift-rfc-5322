@@ -54,7 +54,7 @@ extension RFC_5322 {
 
 extension RFC_5322.Header: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (RFC_5322.Header) -> [UInt8] = [UInt8].init
-    
+
     /// Parses a header from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.

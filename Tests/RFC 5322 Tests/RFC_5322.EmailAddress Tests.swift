@@ -109,7 +109,7 @@ struct `RFC_5322.EmailAddress Tests` {
             "test#value@example.com",
             "name+tag@example.com",
             "user=value@example.com",
-            "test!user|tag@example.com"
+            "test!user|tag@example.com",
         ]
 
         for address in testAddresses {

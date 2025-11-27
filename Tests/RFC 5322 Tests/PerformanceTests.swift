@@ -7,5 +7,8 @@
 
 import Testing
 
-@Suite(.serialized)
+@MainActor
+@Suite(
+    .serialized
+)
 struct PerformanceTests {}

@@ -5,9 +5,10 @@
 //  Tests for [UInt8] extension initializers for byte-level conversions
 //
 
-import Testing
-@testable import RFC_5322
 import INCITS_4_1986
+import Testing
+
+@testable import RFC_5322
 
 @Suite
 struct `[UInt8] Conversions Tests` {
@@ -113,7 +114,7 @@ struct `[UInt8] Conversions Tests` {
 
     @Test
     func `DateTime bytes match formatted string`() {
-        let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+        let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
         let bytes = [UInt8](dateTime)
         let fromBytes = String(decoding: bytes, as: UTF8.self)
         let fromDescription = dateTime.description
@@ -283,8 +284,10 @@ struct `[UInt8] Conversions Tests` {
         // Should contain double CRLF (empty line separator)
         var hasDoubleCRLF = false
         for i in 0..<(bytes.count - 3) {
-            if bytes[i] == UInt8.ascii.cr && bytes[i + 1] == UInt8.ascii.lf &&
-               bytes[i + 2] == UInt8.ascii.cr && bytes[i + 3] == UInt8.ascii.lf {
+            let isDoubleCRLF =
+                bytes[i] == UInt8.ascii.cr && bytes[i + 1] == UInt8.ascii.lf
+                && bytes[i + 2] == UInt8.ascii.cr && bytes[i + 3] == UInt8.ascii.lf
+            if isDoubleCRLF {
                 hasDoubleCRLF = true
                 break
             }
@@ -317,7 +320,7 @@ struct `[UInt8] Conversions Tests` {
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [
                 try RFC_5322.EmailAddress("alice@example.com"),
-                try RFC_5322.EmailAddress("bob@example.com")
+                try RFC_5322.EmailAddress("bob@example.com"),
             ],
             date: .init(secondsSinceEpoch: 0),
             subject: "Test",
@@ -338,7 +341,7 @@ struct `[UInt8] Conversions Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: RFC_5322.DateTime(secondsSinceEpoch: 1609459200),
+            date: RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200),
             subject: "Test Message",
             messageId: "<test@example.com>",
             body: Array("Hello, World!".utf8)

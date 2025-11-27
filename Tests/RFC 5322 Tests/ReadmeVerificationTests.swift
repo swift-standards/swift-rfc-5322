@@ -47,9 +47,9 @@ struct `README Verification Tests` {
                 domain: .init("example.com")
             ),
             to: [try RFC_5322.EmailAddress("jane@example.com")],
-            date: RFC_5322.DateTime(secondsSinceEpoch: 1609459200),
+            date: RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200),
             subject: "Hello from Swift!",
-            messageId: RFC_5322.Message.ID.init(
+            messageId: RFC_5322.Message.ID(
                 uniqueId: "test-unique-id",
                 domain: try RFC_5322.EmailAddress("john@example.com").domain,
             ),
@@ -71,7 +71,7 @@ struct `README Verification Tests` {
                 domain: .init("example.com")
             ),
             to: [try RFC_5322.EmailAddress("jane@example.com")],
-            date: RFC_5322.DateTime(secondsSinceEpoch: 1609459200),
+            date: RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200),
             subject: "Hello from Swift!",
             messageId: "<test@example.com>",
             body: Array("Hello, World!".utf8)
@@ -93,7 +93,7 @@ struct `README Verification Tests` {
             cc: [RFC_5322.EmailAddress("cc@example.com")],
             bcc: [RFC_5322.EmailAddress("bcc@example.com")],
             replyTo: RFC_5322.EmailAddress("replyto@example.com"),
-            date: RFC_5322.DateTime(secondsSinceEpoch: 1609459200),
+            date: RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200),
             subject: "Meeting Notes",
             messageId: "<unique-id@example.com>",
             body: Array("Meeting summary...".utf8),
@@ -102,7 +102,7 @@ struct `README Verification Tests` {
                 RFC_5322.Header(
                     name: .init("X-Mailer"),
                     value: .init("Custom Mailer")
-                )
+                ),
             ]
         )
 
@@ -114,7 +114,7 @@ struct `README Verification Tests` {
 
     @Test
     func `README Line 128-129: Format date`() throws {
-        let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+        let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
         #expect(!dateTime.description.isEmpty)
         // Should contain day, month, year, time
         #expect(dateTime.description.contains(","))

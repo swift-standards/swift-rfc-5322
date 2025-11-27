@@ -6,6 +6,7 @@
 //
 
 import Testing
+
 @testable import RFC_5322
 
 @Suite
@@ -42,7 +43,7 @@ struct `RFC_5322.Message Tests` {
             to: [
                 try RFC_5322.EmailAddress("alice@example.com"),
                 try RFC_5322.EmailAddress("bob@example.com"),
-                try RFC_5322.EmailAddress("charlie@example.com")
+                try RFC_5322.EmailAddress("charlie@example.com"),
             ],
             date: .init(secondsSinceEpoch: 0),
             subject: "Group Message",
@@ -116,7 +117,7 @@ struct `RFC_5322.Message Tests` {
             body: .init(utf8: "Test"),
             additionalHeaders: [
                 RFC_5322.Header(name: .xPriority, value: 1),
-                RFC_5322.Header(name: .inReplyTo, value: .init("<previous@example.com>"))
+                RFC_5322.Header(name: .inReplyTo, value: .init("<previous@example.com>")),
             ]
         )
 
@@ -164,7 +165,7 @@ struct `RFC_5322.Message Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: RFC_5322.DateTime(secondsSinceEpoch: 1609459200),
+            date: RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200),
             subject: "Test Message",
             messageId: "<test@example.com>",
             body: .init("Hello, World!".utf8)

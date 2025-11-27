@@ -5,9 +5,9 @@
 //  Created by Coen ten Thije Boonkkamp on 12/11/2025.
 //
 
+import INCITS_4_1986
 import RFC_1123
 import Standards
-import INCITS_4_1986
 
 extension RFC_5322 {
     /// RFC 5322 Internet Message Format
@@ -111,8 +111,7 @@ extension RFC_5322 {
 
 extension RFC_5322.Message: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (RFC_5322.Message) -> [UInt8] = [UInt8].init
-    
-    
+
     /// Parses an RFC 5322 message from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// **FUTURE TASK**: This is the canonical primitive parser for RFC 5322 messages.
@@ -277,5 +276,3 @@ extension [UInt8] {
 }
 
 extension RFC_5322.Message: CustomStringConvertible {}
-
-

@@ -13,8 +13,12 @@ extension Target.Dependency {
     static var rfc1123: Self { .product(name: "RFC 1123", package: "swift-rfc-1123") }
     static var standards: Self { .product(name: "Standards", package: "swift-standards") }
     static var time: Self { .product(name: "StandardTime", package: "swift-standards") }
-    static var incits_4_1986: Self { .product(name: "INCITS 4 1986", package: "swift-incits-4-1986") }
-    static var standardsTestSupport: Self { .product(name: "StandardsTestSupport", package: "swift-standards") }
+    static var incits_4_1986: Self {
+        .product(name: "INCITS 4 1986", package: "swift-incits-4-1986")
+    }
+    static var standardsTestSupport: Self {
+        .product(name: "StandardsTestSupport", package: "swift-standards")
+    }
 }
 
 let package = Package(
@@ -23,16 +27,16 @@ let package = Package(
         .macOS(.v15),
         .iOS(.v18),
         .tvOS(.v18),
-        .watchOS(.v11)
+        .watchOS(.v11),
     ],
     products: [
         .library(name: .rfc5322, targets: [.rfc5322]),
         .library(name: .rfc5322Foundation, targets: [.rfc5322Foundation]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-standards/swift-rfc-1123.git", from: "0.0.1"),
-        .package(url: "https://github.com/swift-standards/swift-standards.git", from: "0.0.1"),
-        .package(url: "https://github.com/swift-standards/swift-incits-4-1986.git", from: "0.0.1")
+        .package(url: "https://github.com/swift-standards/swift-rfc-1123.git", from: "0.3.1"),
+        .package(url: "https://github.com/swift-standards/swift-standards.git", from: "0.4.0"),
+        .package(url: "https://github.com/swift-standards/swift-incits-4-1986.git", from: "0.4.0"),
     ],
     targets: [
         .target(
@@ -41,7 +45,7 @@ let package = Package(
                 .standards,
                 .time,
                 .rfc1123,
-                .incits_4_1986
+                .incits_4_1986,
             ]
         ),
         .target(
@@ -56,7 +60,7 @@ let package = Package(
                 .rfc5322,
                 .time,
                 .incits_4_1986,
-                .standardsTestSupport
+                .standardsTestSupport,
             ]
         ),
         .testTarget(
@@ -64,7 +68,7 @@ let package = Package(
             dependencies: [
                 .rfc5322,
                 .rfc5322Foundation,
-                .time
+                .time,
             ]
         ),
     ],
@@ -78,9 +82,10 @@ extension String {
 
 for target in package.targets where ![.system, .binary, .plugin].contains(target.type) {
     let existing = target.swiftSettings ?? []
-    target.swiftSettings = existing + [
-        .enableUpcomingFeature("ExistentialAny"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
-        .enableUpcomingFeature("MemberImportVisibility")
-    ]
+    target.swiftSettings =
+        existing + [
+            .enableUpcomingFeature("ExistentialAny"),
+            .enableUpcomingFeature("InternalImportsByDefault"),
+            .enableUpcomingFeature("MemberImportVisibility"),
+        ]
 }

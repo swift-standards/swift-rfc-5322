@@ -18,7 +18,7 @@
   },
   "rules": {
     "AllPublicDeclarationsHaveDocumentation": false,
-    "AlwaysUseLowerCamelCase": true,
+    "AlwaysUseLowerCamelCase": false,
     "AmbiguousTrailingClosureOverload": true,
     "BeginDocumentationCommentWithOneLineSummary": false,
     "DoNotUseSemicolons": true,

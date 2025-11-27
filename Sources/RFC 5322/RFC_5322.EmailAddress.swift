@@ -13,13 +13,13 @@ extension RFC_5322 {
     public struct EmailAddress: Hashable, Sendable {
         /// The display name, if present
         public let displayName: String?
-        
+
         /// The local part (before @)
         public let localPart: LocalPart
-        
+
         /// The domain part (after @)
         public let domain: RFC_1123.Domain
-        
+
         /// Initialize with components
         public init(
             displayName: String? = nil,
@@ -33,10 +33,9 @@ extension RFC_5322 {
     }
 }
 
-
 extension RFC_5322.EmailAddress: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (RFC_5322.EmailAddress) -> [UInt8] = [UInt8].init
-    
+
     /// Parses email address from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
@@ -221,7 +220,8 @@ extension [UInt8] {
         if let displayName = emailAddress.displayName {
             // Check if quoting is needed for display name
             let needsQuoting = displayName.contains(where: {
-                !$0.ascii.isLetter && !$0.ascii.isDigit && !$0.ascii.isWhitespace || $0.asciiValue == nil
+                !$0.ascii.isLetter && !$0.ascii.isDigit && !$0.ascii.isWhitespace
+                    || $0.asciiValue == nil
             })
 
             if needsQuoting {

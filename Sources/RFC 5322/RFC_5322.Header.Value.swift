@@ -10,7 +10,7 @@ public import INCITS_4_1986
 extension RFC_5322.Header {
     public struct Value: Sendable, Hashable, Codable {
         public let rawValue: String
-        
+
         init(
             __unchecked: Void,
             rawValue: String
@@ -20,7 +20,7 @@ extension RFC_5322.Header {
     }
 }
 
-extension RFC_5322.Header.Value  {
+extension RFC_5322.Header.Value {
     /// Equality comparison (case-sensitive)
     public static func == (lhs: RFC_5322.Header.Value, rhs: RFC_5322.Header.Value) -> Bool {
         lhs.rawValue == rhs.rawValue
@@ -34,7 +34,7 @@ extension RFC_5322.Header.Value  {
 
 extension RFC_5322.Header.Value: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
-    
+
     /// Parses a header value from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
@@ -92,24 +92,38 @@ extension RFC_5322.Header.Value: UInt8.ASCII.Serializable {
                 // Must be followed by LF (CRLF sequence)
                 guard nextIndex != bytes.endIndex, bytes[nextIndex] == .ascii.lf else {
                     let string = String(decoding: bytes, as: UTF8.self)
-                    throw Error.invalidCharacter(string, byte: byte, reason: "CR must be followed by LF")
+                    throw Error.invalidCharacter(
+                        string,
+                        byte: byte,
+                        reason: "CR must be followed by LF"
+                    )
                 }
 
                 let afterLFIndex = bytes.index(after: nextIndex)
                 // CRLF found - check if it's followed by WSP (folding)
-                if afterLFIndex != bytes.endIndex,
-                   (bytes[afterLFIndex] == .ascii.sp || bytes[afterLFIndex] == .ascii.htab) {
+                let hasWSP =
+                    afterLFIndex != bytes.endIndex
+                    && (bytes[afterLFIndex] == .ascii.sp || bytes[afterLFIndex] == .ascii.htab)
+                if hasWSP {
                     // Valid folding: skip CRLF, keep the WSP
                     index = afterLFIndex  // Move to WSP, will be added in next iteration
                 } else {
                     // CRLF not followed by WSP - invalid
                     let string = String(decoding: bytes, as: UTF8.self)
-                    throw Error.invalidFolding(string, byte: byte, reason: "CRLF must be followed by WSP (space or tab) for folding")
+                    throw Error.invalidFolding(
+                        string,
+                        byte: byte,
+                        reason: "CRLF must be followed by WSP (space or tab) for folding"
+                    )
                 }
             } else if byte == .ascii.lf {
                 // LF without CR - invalid
                 let string = String(decoding: bytes, as: UTF8.self)
-                throw Error.invalidCharacter(string, byte: byte, reason: "LF must be preceded by CR")
+                throw Error.invalidCharacter(
+                    string,
+                    byte: byte,
+                    reason: "LF must be preceded by CR"
+                )
             } else {
                 unfolded.append(byte)
                 index = bytes.index(after: index)

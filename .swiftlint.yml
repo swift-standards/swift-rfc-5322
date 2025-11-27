@@ -3,5 +3,8 @@
 
 parent_config: https://raw.githubusercontent.com/swift-standards/swift-standards/main/.swiftlint.yml
 
-# Package-specific overrides (if needed)
-# Add any swift-rfc-5322 specific rules here
+# Package-specific overrides
+# These rules are disabled due to the nature of RFC parsing code
+disabled_rules:
+  - cyclomatic_complexity
+  - function_body_length

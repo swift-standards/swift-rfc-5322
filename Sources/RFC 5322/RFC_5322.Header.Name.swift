@@ -7,7 +7,6 @@
 
 public import INCITS_4_1986
 
-
 extension RFC_5322.Header {
     /// Email header field name
     ///
@@ -49,7 +48,7 @@ extension RFC_5322.Header {
     public struct Name: Sendable, Codable {
         /// The header field name
         public let rawValue: String
-        
+
         /// Creates a header name
         ///
         /// - Parameter rawValue: The header field name (case-insensitive)
@@ -65,17 +64,17 @@ extension RFC_5322.Header {
 }
 
 extension RFC_5322.Header.Name: Hashable {
-    
+
     /// Hash value (case-insensitive)
     public func hash(into hasher: inout Hasher) {
         hasher.combine(rawValue.lowercased())
     }
-    
+
     /// Equality comparison (case-insensitive)
     public static func == (lhs: RFC_5322.Header.Name, rhs: RFC_5322.Header.Name) -> Bool {
         lhs.rawValue.lowercased() == rhs.rawValue.lowercased()
     }
-    
+
     /// Equality comparison (case-insensitive)
     public static func == (lhs: RFC_5322.Header.Name, rhs: Self.RawValue) -> Bool {
         lhs.rawValue.lowercased() == rhs.lowercased()
@@ -84,7 +83,7 @@ extension RFC_5322.Header.Name: Hashable {
 
 extension RFC_5322.Header.Name: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
-    
+
     /// Parses a header name from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
@@ -116,7 +115,7 @@ extension RFC_5322.Header.Name: UInt8.ASCII.Serializable {
         guard !bytes.isEmpty else {
             throw Error.empty
         }
-        
+
         // Validate characters: printable ASCII except colon
         // ftext = %d33-57 / %d59-126
         // Using INCITS_4_1986: .ascii.isVisible (0x21-0x7E) excludes colon (0x3A)
@@ -124,7 +123,8 @@ extension RFC_5322.Header.Name: UInt8.ASCII.Serializable {
             // Must be visible ASCII (0x21-0x7E) but not colon (0x3A/58)
             guard byte.ascii.isVisible && byte != .ascii.colon else {
                 let string = String(decoding: bytes, as: UTF8.self)
-                let reason = byte == .ascii.colon
+                let reason =
+                    byte == .ascii.colon
                     ? "Field name cannot contain colon"
                     : "Must be printable ASCII except colon"
                 throw Error.invalidCharacter(string, byte: byte, reason: reason)
@@ -223,7 +223,6 @@ extension RFC_5322.Header.Name {
     public static let received: Self = .init(__unchecked: (), rawValue: "Received")
 }
 
-
 extension RFC_5322.Header.Name {
     /// X-Mailer: header (mail client identification)
     public static let xMailer: Self = .init(__unchecked: (), rawValue: "X-Mailer")
@@ -244,24 +243,37 @@ extension RFC_5322.Header.Name {
     public static let autoSubmitted: Self = .init(__unchecked: (), rawValue: "Auto-Submitted")
 }
 
-
 extension RFC_5322.Header.Name {
     /// X-Apple-Base-Url: header
     public static let xAppleBaseUrl: Self = .init(__unchecked: (), rawValue: "X-Apple-Base-Url")
 
     /// X-Universally-Unique-Identifier: header
-    public static let xUniversallyUniqueIdentifier: Self = .init(__unchecked: (), rawValue: "X-Universally-Unique-Identifier")
+    public static let xUniversallyUniqueIdentifier: Self = .init(
+        __unchecked: (),
+        rawValue: "X-Universally-Unique-Identifier"
+    )
 
     /// X-Apple-Mail-Remote-Attachments: header
-    public static let xAppleMailRemoteAttachments: Self = .init(__unchecked: (), rawValue: "X-Apple-Mail-Remote-Attachments")
+    public static let xAppleMailRemoteAttachments: Self = .init(
+        __unchecked: (),
+        rawValue: "X-Apple-Mail-Remote-Attachments"
+    )
 
     /// X-Apple-Windows-Friendly: header
-    public static let xAppleWindowsFriendly: Self = .init(__unchecked: (), rawValue: "X-Apple-Windows-Friendly")
+    public static let xAppleWindowsFriendly: Self = .init(
+        __unchecked: (),
+        rawValue: "X-Apple-Windows-Friendly"
+    )
 
     /// X-Apple-Mail-Signature: header
-    public static let xAppleMailSignature: Self = .init(__unchecked: (), rawValue: "X-Apple-Mail-Signature")
+    public static let xAppleMailSignature: Self = .init(
+        __unchecked: (),
+        rawValue: "X-Apple-Mail-Signature"
+    )
 
     /// X-Uniform-Type-Identifier: header
-    public static let xUniformTypeIdentifier: Self = .init(__unchecked: (), rawValue: "X-Uniform-Type-Identifier")
+    public static let xUniformTypeIdentifier: Self = .init(
+        __unchecked: (),
+        rawValue: "X-Uniform-Type-Identifier"
+    )
 }
-

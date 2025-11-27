@@ -6,6 +6,7 @@
 //
 
 import Testing
+
 @testable import RFC_5322
 
 @Suite
@@ -65,7 +66,7 @@ struct `String Tests` {
         let message = RFC_5322.Message(
             from: try RFC_5322.EmailAddress("sender@example.com"),
             to: [try RFC_5322.EmailAddress("recipient@example.com")],
-            date: RFC_5322.DateTime(secondsSinceEpoch: 1609459200),
+            date: RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200),
             subject: "Test",
             messageId: "<test@example.com>",
             body: Array("Hello".utf8)
@@ -117,7 +118,7 @@ struct `String Tests` {
 
     @Test
     func `DateTime string matches description`() {
-        let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1609459200)
+        let dateTime = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
 
         #expect(String(dateTime) == dateTime.description)
     }

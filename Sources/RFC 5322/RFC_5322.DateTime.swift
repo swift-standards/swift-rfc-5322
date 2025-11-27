@@ -4,9 +4,9 @@
 // RFC 5322 date-time representation and formatting
 // Format: "Mon, 01 Jan 2024 12:34:56 +0000"
 
-import Standards
 import INCITS_4_1986
 public import StandardTime
+import Standards
 
 extension RFC_5322 {
     /// RFC 5322 date-time representation
@@ -23,12 +23,12 @@ extension RFC_5322 {
     public struct DateTime: Sendable, Equatable, Hashable, Comparable {
         /// The UTC time
         public let time: Time
-        
+
         /// Timezone offset from UTC
         /// Positive values are east of UTC, negative values are west
         /// Example: +0100 = 1 hour, -0500 = -5 hours
         public let timezoneOffset: Time.TimezoneOffset
-        
+
         /// Create a date-time from Time and timezone offset
         /// - Parameters:
         ///   - time: The UTC time
@@ -46,7 +46,7 @@ extension RFC_5322 {
 
 extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (RFC_5322.DateTime) -> [UInt8] = [UInt8].init
-    
+
     /// Parses RFC 5322 date-time from canonical byte representation (CANONICAL PRIMITIVE)
     ///
     /// This is the primitive parser that works at the byte level.
@@ -192,18 +192,18 @@ extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
         let offsetMinutesString = String(decoding: offsetMinutesBytes, as: UTF8.self)
 
         guard let offsetHours = Int(offsetHoursString),
-              let offsetMinutes = Int(offsetMinutesString),
-              offsetHours >= 0, offsetHours <= 23,
-              offsetMinutes >= 0, offsetMinutes <= 59
+            let offsetMinutes = Int(offsetMinutesString),
+            offsetHours >= 0, offsetHours <= 23,
+            offsetMinutes >= 0, offsetMinutes <= 59
         else {
             let timezoneString = String(decoding: timezoneBytes, as: UTF8.self)
             throw Error.invalidTimezone(timezoneString)
         }
 
-        let timezoneOffsetSeconds = sign * (
-            offsetHours * Time.Calendar.Gregorian.TimeConstants.secondsPerHour +
-            offsetMinutes * Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
-        )
+        let timezoneOffsetSeconds =
+            sign
+            * (offsetHours * Time.Calendar.Gregorian.TimeConstants.secondsPerHour + offsetMinutes
+                * Time.Calendar.Gregorian.TimeConstants.secondsPerMinute)
 
         // Create date-time in UTC with validated components
         // Time.init throws Time.Error, not our typed error, so we use do-catch
@@ -275,7 +275,7 @@ extension [UInt8] {
         let components = dateTime.components
 
         var result = [UInt8]()
-        result.reserveCapacity(31) // "Mon, 01 Jan 2024 12:34:56 +0000" = 31 bytes
+        result.reserveCapacity(31)  // "Mon, 01 Jan 2024 12:34:56 +0000" = 31 bytes
 
         // Day name (e.g., "Mon")
         let dayName = RFC_5322.DateTime.dayNames[components.weekday]
@@ -317,8 +317,13 @@ extension [UInt8] {
         let offsetSign = dateTime.timezoneOffsetSeconds >= 0 ? "+" : "-"
         result.append(utf8: offsetSign)
 
-        let offsetHours = abs(dateTime.timezoneOffsetSeconds) / Time.Calendar.Gregorian.TimeConstants.secondsPerHour
-        let offsetMinutes = (abs(dateTime.timezoneOffsetSeconds) % Time.Calendar.Gregorian.TimeConstants.secondsPerHour) / Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
+        let offsetHours =
+            abs(dateTime.timezoneOffsetSeconds)
+            / Time.Calendar.Gregorian.TimeConstants.secondsPerHour
+        let offsetMinutes =
+            (abs(dateTime.timezoneOffsetSeconds)
+                % Time.Calendar.Gregorian.TimeConstants.secondsPerHour)
+            / Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
 
         let offsetHoursStr = offsetHours.zeroPaddedTwoDigits()
         result.append(utf8: offsetHoursStr)
@@ -359,7 +364,7 @@ extension RFC_5322.DateTime {
     public init(
         year: Int,
         month: Int,  // 1-12
-        day: Int,    // 1-31
+        day: Int,  // 1-31
         hour: Int = 0,
         minute: Int = 0,
         second: Int = 0,
@@ -375,19 +380,17 @@ extension RFC_5322.DateTime {
             minute: minute,
             second: second
         )
-        
+
         self.init(time: time, timezoneOffset: Time.TimezoneOffset(seconds: timezoneOffsetSeconds))
     }
 }
-
-
 
 extension RFC_5322.DateTime {
     /// Seconds since Unix epoch (computed property for compatibility)
     public var secondsSinceEpoch: Int {
         time.secondsSinceEpoch
     }
-    
+
     /// Timezone offset in seconds (computed property for compatibility)
     public var timezoneOffsetSeconds: Int {
         timezoneOffset.seconds
@@ -459,14 +462,13 @@ extension RFC_5322.DateTime {
     /// These are protocol-mandated values and must not be localized
     public static let monthNames = [
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ]
 
     /// Day names per RFC 5322 section 3.3
     /// These are protocol-mandated values and must not be localized
     public static let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 }
-
 
 // MARK: - Compositional Operations (Swifty monoid/functor-like behavior)
 
@@ -480,7 +482,10 @@ extension RFC_5322.DateTime {
     /// let tomorrow = dt.addingSeconds(86400)  // Add 1 day
     /// ```
     public func addingSeconds(_ seconds: Int) -> Self {
-        Self(secondsSinceEpoch: secondsSinceEpoch + seconds, timezoneOffsetSeconds: timezoneOffsetSeconds)
+        Self(
+            secondsSinceEpoch: secondsSinceEpoch + seconds,
+            timezoneOffsetSeconds: timezoneOffsetSeconds
+        )
     }
 
     /// Returns a new DateTime by subtracting the specified number of seconds
@@ -514,6 +519,7 @@ extension RFC_5322.DateTime {
     /// Returns a new DateTime at the start of the day (00:00:00)
     public func startOfDay() -> Self {
         let components = self.components
+        // swiftlint:disable:next force_try
         return try! Self(
             year: components.year,
             month: components.month,
@@ -528,6 +534,7 @@ extension RFC_5322.DateTime {
     /// Returns a new DateTime at the end of the day (23:59:59)
     public func endOfDay() -> Self {
         let components = self.components
+        // swiftlint:disable:next force_try
         return try! Self(
             year: components.year,
             month: components.month,
@@ -608,5 +615,3 @@ extension RFC_5322.DateTime: Codable {
 }
 
 // MARK: - CustomStringConvertible
-
-
