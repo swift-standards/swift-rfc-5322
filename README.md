@@ -250,6 +250,10 @@ public enum HeaderName {
 - [swift-rfc-1123](https://github.com/swift-standards/swift-rfc-1123) - Domain name validation
 - [swift-rfc-5321](https://github.com/swift-standards/swift-rfc-5321) - SMTP email address format
 
+### Related Standards
+- [swift-rfc-6068](https://github.com/swift-standards/swift-rfc-6068) - The 'mailto' URI Scheme (uses RFC 5322 EmailAddress)
+- [swift-rfc-2369](https://github.com/swift-standards/swift-rfc-2369) - URLs for Mailing List Management
+
 ### Used By
 - Email clients and server implementations
 - Message composition tools
