@@ -82,7 +82,7 @@ extension RFC_5322.Header.Name: Hashable {
     }
 }
 
-extension RFC_5322.Header.Name: UInt8.ASCII.Serializing {
+extension RFC_5322.Header.Name: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
     
     /// Parses a header name from canonical byte representation (CANONICAL PRIMITIVE)

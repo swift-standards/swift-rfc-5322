@@ -34,7 +34,7 @@ extension RFC_5322 {
 }
 
 
-extension RFC_5322.EmailAddress: UInt8.ASCII.Serializing {
+extension RFC_5322.EmailAddress: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (RFC_5322.EmailAddress) -> [UInt8] = [UInt8].init
     
     /// Parses email address from canonical byte representation (CANONICAL PRIMITIVE)

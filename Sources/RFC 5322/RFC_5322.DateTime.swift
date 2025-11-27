@@ -44,7 +44,7 @@ extension RFC_5322 {
     public typealias Date = RFC_5322.DateTime
 }
 
-extension RFC_5322.DateTime: UInt8.ASCII.Serializing {
+extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (RFC_5322.DateTime) -> [UInt8] = [UInt8].init
     
     /// Parses RFC 5322 date-time from canonical byte representation (CANONICAL PRIMITIVE)

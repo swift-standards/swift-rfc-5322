@@ -109,7 +109,7 @@ extension RFC_5322 {
     }
 }
 
-extension RFC_5322.Message: UInt8.ASCII.Serializing {
+extension RFC_5322.Message: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (RFC_5322.Message) -> [UInt8] = [UInt8].init
     
     
