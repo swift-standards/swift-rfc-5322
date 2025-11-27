@@ -444,9 +444,9 @@ extension RFC_5322.DateTime {
         // Use unchecked initializer to bypass validation in hot path
         return RFC_5322.Date.Components(
             __unchecked: (),
-            year: localTime.year.value,
-            month: localTime.month.value,
-            day: localTime.day.value,
+            year: localTime.year.rawValue,
+            month: localTime.month.rawValue,
+            day: localTime.day.rawValue,
             hour: localTime.hour.value,
             minute: localTime.minute.value,
             second: localTime.second.value,
