@@ -45,7 +45,68 @@ extension RFC_5322 {
 }
 
 extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (RFC_5322.DateTime) -> [UInt8] = [UInt8].init
+    public static func serialize(ascii dateTime: RFC_5322.DateTime) -> [UInt8] {
+        let components = dateTime.components
+
+        var result = [UInt8]()
+        result.reserveCapacity(31)  // "Mon, 01 Jan 2024 12:34:56 +0000" = 31 bytes
+
+        // Day name (e.g., "Mon")
+        let dayName = RFC_5322.DateTime.dayNames[components.weekday]
+        result.append(utf8: dayName)
+        result.append(.ascii.comma)
+        result.append(.ascii.space)
+
+        // Day (zero-padded 2 digits)
+        let day = components.day.zeroPaddedTwoDigits()
+        result.append(utf8: day)
+        result.append(.ascii.space)
+
+        // Month name (e.g., "Jan")
+        let monthName = RFC_5322.DateTime.monthNames[components.month - 1]
+        result.append(utf8: monthName)
+        result.append(.ascii.space)
+
+        // Year (4 digits)
+        let year = components.year.zeroPaddedFourDigits()
+        result.append(utf8: year)
+        result.append(.ascii.space)
+
+        // Hour (zero-padded 2 digits)
+        let hour = components.hour.zeroPaddedTwoDigits()
+        result.append(utf8: hour)
+        result.append(.ascii.colon)
+
+        // Minute (zero-padded 2 digits)
+        let minute = components.minute.zeroPaddedTwoDigits()
+        result.append(utf8: minute)
+        result.append(.ascii.colon)
+
+        // Second (zero-padded 2 digits)
+        let second = components.second.zeroPaddedTwoDigits()
+        result.append(utf8: second)
+        result.append(.ascii.space)
+
+        // Timezone offset
+        let offsetSign = dateTime.timezoneOffsetSeconds >= 0 ? "+" : "-"
+        result.append(utf8: offsetSign)
+
+        let offsetHours =
+            abs(dateTime.timezoneOffsetSeconds)
+            / Time.Calendar.Gregorian.TimeConstants.secondsPerHour
+        let offsetMinutes =
+            (abs(dateTime.timezoneOffsetSeconds)
+                % Time.Calendar.Gregorian.TimeConstants.secondsPerHour)
+            / Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
+
+        let offsetHoursStr = offsetHours.zeroPaddedTwoDigits()
+        result.append(utf8: offsetHoursStr)
+
+        let offsetMinutesStr = offsetMinutes.zeroPaddedTwoDigits()
+        result.append(utf8: offsetMinutesStr)
+
+        return result
+    }
 
     /// Parses RFC 5322 date-time from canonical byte representation (CANONICAL PRIMITIVE)
     ///
@@ -239,99 +300,6 @@ extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
         }
 
         self = localDateTime
-    }
-}
-
-extension [UInt8] {
-    /// Creates RFC 5322 formatted date-time bytes (CANONICAL SERIALIZATION)
-    ///
-    /// This is the canonical byte-level serialization of RFC 5322 date-times.
-    ///
-    /// ## Category Theory
-    ///
-    /// This is the fundamental serialization transformation:
-    /// - **Domain**: RFC_5322.DateTime (structured data)
-    /// - **Codomain**: [UInt8] (ASCII bytes)
-    ///
-    /// String representation is derived as composition:
-    /// ```
-    /// DateTime → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    ///
-    /// ## Format
-    ///
-    /// Produces RFC 5322 date-time format: "Mon, 01 Jan 2024 12:34:56 +0000"
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let dateTime = try RFC_5322.DateTime(year: 2024, month: 1, day: 1, hour: 12)
-    /// let bytes = [UInt8](dateTime)
-    /// // bytes == "Mon, 01 Jan 2024 12:00:00 +0000" as ASCII bytes
-    /// ```
-    ///
-    /// - Parameter dateTime: The date-time to serialize
-    public init(_ dateTime: RFC_5322.DateTime) {
-        let components = dateTime.components
-
-        var result = [UInt8]()
-        result.reserveCapacity(31)  // "Mon, 01 Jan 2024 12:34:56 +0000" = 31 bytes
-
-        // Day name (e.g., "Mon")
-        let dayName = RFC_5322.DateTime.dayNames[components.weekday]
-        result.append(utf8: dayName)
-        result.append(.ascii.comma)
-        result.append(.ascii.space)
-
-        // Day (zero-padded 2 digits)
-        let day = components.day.zeroPaddedTwoDigits()
-        result.append(utf8: day)
-        result.append(.ascii.space)
-
-        // Month name (e.g., "Jan")
-        let monthName = RFC_5322.DateTime.monthNames[components.month - 1]
-        result.append(utf8: monthName)
-        result.append(.ascii.space)
-
-        // Year (4 digits)
-        let year = components.year.zeroPaddedFourDigits()
-        result.append(utf8: year)
-        result.append(.ascii.space)
-
-        // Hour (zero-padded 2 digits)
-        let hour = components.hour.zeroPaddedTwoDigits()
-        result.append(utf8: hour)
-        result.append(.ascii.colon)
-
-        // Minute (zero-padded 2 digits)
-        let minute = components.minute.zeroPaddedTwoDigits()
-        result.append(utf8: minute)
-        result.append(.ascii.colon)
-
-        // Second (zero-padded 2 digits)
-        let second = components.second.zeroPaddedTwoDigits()
-        result.append(utf8: second)
-        result.append(.ascii.space)
-
-        // Timezone offset
-        let offsetSign = dateTime.timezoneOffsetSeconds >= 0 ? "+" : "-"
-        result.append(utf8: offsetSign)
-
-        let offsetHours =
-            abs(dateTime.timezoneOffsetSeconds)
-            / Time.Calendar.Gregorian.TimeConstants.secondsPerHour
-        let offsetMinutes =
-            (abs(dateTime.timezoneOffsetSeconds)
-                % Time.Calendar.Gregorian.TimeConstants.secondsPerHour)
-            / Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
-
-        let offsetHoursStr = offsetHours.zeroPaddedTwoDigits()
-        result.append(utf8: offsetHoursStr)
-
-        let offsetMinutesStr = offsetMinutes.zeroPaddedTwoDigits()
-        result.append(utf8: offsetMinutesStr)
-
-        self = result
     }
 }
 

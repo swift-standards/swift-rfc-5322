@@ -34,7 +34,44 @@ extension RFC_5322 {
 }
 
 extension RFC_5322.EmailAddress: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (RFC_5322.EmailAddress) -> [UInt8] = [UInt8].init
+    static public func serialize(ascii emailAddress: RFC_5322.EmailAddress) -> [UInt8] {
+        var result = [UInt8]()
+
+        if let displayName = emailAddress.displayName {
+            // Check if quoting is needed for display name
+            let needsQuoting = displayName.contains(where: {
+                !$0.ascii.isLetter && !$0.ascii.isDigit && !$0.ascii.isWhitespace
+                    || $0.asciiValue == nil
+            })
+
+            if needsQuoting {
+                result.append(.ascii.dquote)
+                result.append(utf8: displayName)
+                result.append(.ascii.dquote)
+            } else {
+                result.append(utf8: displayName)
+            }
+
+            result.append(.ascii.space)
+            result.append(.ascii.lt)
+
+            // Serialize local-part through bytes
+            result.append(contentsOf: [UInt8](emailAddress.localPart))
+            result.append(.ascii.at)
+
+            // Serialize domain through bytes
+            result.append(contentsOf: [UInt8](emailAddress.domain))
+
+            result.append(.ascii.gt)
+        } else {
+            // Simple format without display name
+            result.append(contentsOf: [UInt8](emailAddress.localPart))
+            result.append(.ascii.at)
+            result.append(contentsOf: [UInt8](emailAddress.domain))
+        }
+
+        return result
+    }
 
     /// Parses email address from canonical byte representation (CANONICAL PRIMITIVE)
     ///
@@ -179,78 +216,6 @@ extension RFC_5322.EmailAddress: UInt8.ASCII.Serializable {
         } catch {
             throw Error.domain(error)
         }
-    }
-}
-
-extension [UInt8] {
-    /// Creates RFC 5322 formatted email address bytes (CANONICAL SERIALIZATION)
-    ///
-    /// This is the canonical byte-level serialization of RFC 5322 email addresses.
-    ///
-    /// ## Category Theory
-    ///
-    /// This is the fundamental serialization transformation:
-    /// - **Domain**: RFC_5322.EmailAddress (structured data)
-    /// - **Codomain**: [UInt8] (ASCII bytes)
-    ///
-    /// String representation is derived as composition:
-    /// ```
-    /// EmailAddress → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    ///
-    /// ## Format
-    ///
-    /// Produces RFC 5322 email address format:
-    /// - Simple: `user@example.com`
-    /// - With display name: `John Doe <user@example.com>`
-    /// - With quoted display name: `"John Doe" <user@example.com>`
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let email = RFC_5322.EmailAddress(displayName: "John", localPart: ..., domain: ...)
-    /// let bytes = [UInt8](email)
-    /// // bytes == "John <user@example.com>" as ASCII bytes
-    /// ```
-    ///
-    /// - Parameter emailAddress: The email address to serialize
-    public init(_ emailAddress: RFC_5322.EmailAddress) {
-        var result = [UInt8]()
-
-        if let displayName = emailAddress.displayName {
-            // Check if quoting is needed for display name
-            let needsQuoting = displayName.contains(where: {
-                !$0.ascii.isLetter && !$0.ascii.isDigit && !$0.ascii.isWhitespace
-                    || $0.asciiValue == nil
-            })
-
-            if needsQuoting {
-                result.append(.ascii.dquote)
-                result.append(utf8: displayName)
-                result.append(.ascii.dquote)
-            } else {
-                result.append(utf8: displayName)
-            }
-
-            result.append(.ascii.space)
-            result.append(.ascii.lt)
-
-            // Serialize local-part through bytes
-            result.append(contentsOf: [UInt8](emailAddress.localPart))
-            result.append(.ascii.at)
-
-            // Serialize domain through bytes
-            result.append(contentsOf: [UInt8](emailAddress.domain))
-
-            result.append(.ascii.gt)
-        } else {
-            // Simple format without display name
-            result.append(contentsOf: [UInt8](emailAddress.localPart))
-            result.append(.ascii.at)
-            result.append(contentsOf: [UInt8](emailAddress.domain))
-        }
-
-        self = result
     }
 }
 

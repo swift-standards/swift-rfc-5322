@@ -53,7 +53,14 @@ extension RFC_5322 {
 // MARK: - Header Parsing
 
 extension RFC_5322.Header: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (RFC_5322.Header) -> [UInt8] = [UInt8].init
+    static public func serialize(ascii header: RFC_5322.Header) -> [UInt8] {
+        var result = [UInt8]()
+        result.append(contentsOf: [UInt8](header.name))
+        result.append(.ascii.colon)
+        result.append(.ascii.space)
+        result.append(contentsOf: [UInt8](header.value))
+        return result
+    }
 
     /// Parses a header from canonical byte representation (CANONICAL PRIMITIVE)
     ///
@@ -110,19 +117,6 @@ extension RFC_5322.Header: UInt8.ASCII.Serializable {
 
         // Use memberwise initializer
         self.init(name: name, value: value)
-    }
-}
-
-extension [UInt8] {
-    /// Creates RFC 5322 formatted header bytes
-    /// Direct byte-level construction without string interpolation
-    public init(_ header: RFC_5322.Header) {
-        var result = [UInt8]()
-        result.append(contentsOf: [UInt8](header.name))
-        result.append(.ascii.colon)
-        result.append(.ascii.space)
-        result.append(contentsOf: [UInt8](header.value))
-        self = result
     }
 }
 
