@@ -24,8 +24,12 @@ extension RFC_5322.EmailAddress.LocalPart {
 }
 
 extension RFC_5322.EmailAddress.LocalPart: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (RFC_5322.EmailAddress.LocalPart) -> [UInt8] = [UInt8]
-        .init
+    static public func serialize(ascii localPart: RFC_5322.EmailAddress.LocalPart) -> [UInt8] {
+        switch localPart.storage {
+        case .dotAtom(let bytes), .quoted(let bytes):
+            return bytes
+        }
+    }
 
     /// Parses a local-part from canonical byte representation (CANONICAL PRIMITIVE)
     ///
@@ -138,45 +142,6 @@ extension RFC_5322.EmailAddress.LocalPart: UInt8.ASCII.Serializable {
             }
 
             self.storage = .dotAtom(Array(bytes))
-        }
-    }
-}
-
-extension [UInt8] {
-    /// Creates ASCII byte representation of an RFC 5322 local-part
-    ///
-    /// This is the canonical serialization of local-parts to bytes.
-    /// RFC 5322 local-parts are ASCII-only by definition.
-    ///
-    /// ## Category Theory
-    ///
-    /// This is the most universal serialization (natural transformation):
-    /// - **Domain**: RFC_5322.EmailAddress.LocalPart (structured data)
-    /// - **Codomain**: [UInt8] (ASCII bytes)
-    ///
-    /// String representation is derived as composition:
-    /// ```
-    /// LocalPart → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    ///
-    /// ## Performance
-    ///
-    /// Zero-cost: Returns internal canonical byte storage directly.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let localPart = try RFC_5322.EmailAddress.LocalPart("user")
-    /// let bytes = [UInt8](localPart)
-    /// // bytes == "user" as ASCII bytes
-    /// ```
-    ///
-    /// - Parameter localPart: The local-part to serialize
-    public init(_ localPart: RFC_5322.EmailAddress.LocalPart) {
-        // Zero-cost: direct access to canonical byte storage
-        switch localPart.storage {
-        case .dotAtom(let bytes), .quoted(let bytes):
-            self = bytes
         }
     }
 }

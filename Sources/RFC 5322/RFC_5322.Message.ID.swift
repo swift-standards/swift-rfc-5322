@@ -40,7 +40,17 @@ extension RFC_5322.Message {
 }
 
 extension RFC_5322.Message.ID: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (RFC_5322.Message.ID) -> [UInt8] = [UInt8].init
+    static public func serialize(ascii messageId: RFC_5322.Message.ID) -> [UInt8] {
+        var result = [UInt8]()
+        result.reserveCapacity(messageId.value.count + 2)  // +2 for angle brackets
+
+        // Always include angle brackets per RFC 5322
+        result.append(.ascii.lt)
+        result.append(contentsOf: messageId.value)
+        result.append(.ascii.gt)
+
+        return result
+    }
 
     /// Parses a Message-ID from canonical byte representation (CANONICAL PRIMITIVE)
     ///
@@ -129,53 +139,6 @@ extension RFC_5322.Message.ID: UInt8.ASCII.Serializable {
         }
 
         self.value = result
-    }
-}
-
-extension [UInt8] {
-    /// Creates RFC 5322 formatted Message-ID bytes (CANONICAL SERIALIZATION)
-    ///
-    /// This is the canonical byte-level serialization of RFC 5322 Message-IDs.
-    ///
-    /// ## Category Theory
-    ///
-    /// This is the fundamental serialization transformation:
-    /// - **Domain**: RFC_5322.Message.ID (structured data)
-    /// - **Codomain**: [UInt8] (ASCII bytes)
-    ///
-    /// String representation is derived as composition:
-    /// ```
-    /// Message.ID → [UInt8] (ASCII) → String (UTF-8 interpretation)
-    /// ```
-    ///
-    /// ## Format
-    ///
-    /// Produces RFC 5322 Message-ID format: `<unique-string@domain>`
-    /// Always includes angle brackets per RFC 5322 Section 3.6.4.
-    ///
-    /// ## Performance
-    ///
-    /// Zero-copy: Directly wraps stored byte array with angle brackets.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let messageId = RFC_5322.Message.ID(uniqueId: "abc123", domain: "example.com")
-    /// let bytes = [UInt8](messageId)
-    /// // bytes == "<abc123@example.com>" as ASCII bytes
-    /// ```
-    ///
-    /// - Parameter messageId: The Message-ID to serialize
-    public init(_ messageId: RFC_5322.Message.ID) {
-        var result = [UInt8]()
-        result.reserveCapacity(messageId.value.count + 2)  // +2 for angle brackets
-
-        // Always include angle brackets per RFC 5322
-        result.append(.ascii.lt)
-        result.append(contentsOf: messageId.value)
-        result.append(.ascii.gt)
-
-        self = result
     }
 }
 

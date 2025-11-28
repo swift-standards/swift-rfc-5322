@@ -110,94 +110,7 @@ extension RFC_5322 {
 }
 
 extension RFC_5322.Message: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (RFC_5322.Message) -> [UInt8] = [UInt8].init
-
-    /// Parses an RFC 5322 message from canonical byte representation (CANONICAL PRIMITIVE)
-    ///
-    /// **FUTURE TASK**: This is the canonical primitive parser for RFC 5322 messages.
-    ///
-    /// ## Complexity Note
-    ///
-    /// Message parsing is significantly more complex than component parsing because it must handle:
-    /// - Header folding (CRLF + whitespace continuation)
-    /// - Headers in arbitrary order
-    /// - Optional and duplicate headers
-    /// - Unknown/custom headers
-    /// - MIME multi-part structure
-    /// - Encoded-words in headers (=?charset?encoding?text?=)
-    /// - Body transfer encodings (base64, quoted-printable)
-    /// - Lenient parsing vs. strict validation
-    ///
-    /// ## Category Theory
-    ///
-    /// This is the fundamental parsing transformation:
-    /// - **Domain**: [UInt8] (RFC 5322 formatted bytes)
-    /// - **Codomain**: RFC_5322.Message (structured data)
-    ///
-    /// String-based parsing is derived as composition:
-    /// ```
-    /// String → [UInt8] (UTF-8 bytes) → Message
-    /// ```
-    ///
-    /// ## Implementation Strategy
-    ///
-    /// When implemented, this parser should:
-    /// 1. Split message into header section and body at first blank line (CRLF CRLF)
-    /// 2. Parse headers with unfolding (handle CRLF + whitespace)
-    /// 3. Extract required headers (From, To, Date, etc.)
-    /// 4. Preserve additional headers in order
-    /// 5. Handle MIME structure if present
-    /// 6. Decode body based on Content-Transfer-Encoding
-    ///
-    /// ## Example (Future)
-    ///
-    /// ```swift
-    /// let bytes = Array(emlFileContents.utf8)
-    /// let message = try RFC_5322.Message(ascii: bytes)
-    /// ```
-    ///
-    /// - Parameter bytes: The ASCII byte representation of an RFC 5322 message
-    /// - Throws: `RFC_5322.Message.Error` if the bytes are malformed
-    public init<Bytes: Collection>(ascii bytes: Bytes, in context: Void) throws(Error)
-    where Bytes.Element == UInt8 {
-        // TODO: Implement RFC 5322 message parsing
-        // This is a complex parser that must handle:
-        // - Header/body separation
-        // - Header unfolding
-        // - Required header extraction (From, To, Date, Subject)
-        // - Optional header handling (Cc, Bcc, Reply-To, Message-ID)
-        // - MIME structure parsing
-        // - Custom header preservation
-        // - Various encoding schemes
-
-        fatalError("RFC 5322 Message parsing not yet implemented")
-    }
-}
-
-extension [UInt8] {
-    /// Creates RFC 5322 message bytes from a Message (CANONICAL SERIALIZATION)
-    ///
-    /// Generates headers and body in RFC 5322 format suitable for .eml files
-    /// or SMTP transmission. BCC recipients are excluded from the output per RFC 5322.
-    ///
-    /// ## Category Theory
-    ///
-    /// This is the fundamental serialization transformation:
-    /// - **Domain**: RFC_5322.Message (structured data)
-    /// - **Codomain**: [UInt8] (RFC 5322 formatted bytes)
-    ///
-    /// String representation is derived as composition:
-    /// ```
-    /// Message → [UInt8] (RFC 5322 format) → String (UTF-8 interpretation)
-    /// ```
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let message = RFC_5322.Message(...)
-    /// let bytes = [UInt8](message)
-    /// ```
-    public init(_ message: RFC_5322.Message) {
+    static public func serialize(ascii message: RFC_5322.Message) -> [UInt8] {
         // Pre-allocate capacity to avoid reallocations
         // Rough estimate: headers (~500 bytes) + body
         var result = [UInt8]()
@@ -271,7 +184,68 @@ extension [UInt8] {
         // Body (as bytes)
         result.append(contentsOf: message.body)
 
-        self = result
+        return result
+    }
+
+    /// Parses an RFC 5322 message from canonical byte representation (CANONICAL PRIMITIVE)
+    ///
+    /// **FUTURE TASK**: This is the canonical primitive parser for RFC 5322 messages.
+    ///
+    /// ## Complexity Note
+    ///
+    /// Message parsing is significantly more complex than component parsing because it must handle:
+    /// - Header folding (CRLF + whitespace continuation)
+    /// - Headers in arbitrary order
+    /// - Optional and duplicate headers
+    /// - Unknown/custom headers
+    /// - MIME multi-part structure
+    /// - Encoded-words in headers (=?charset?encoding?text?=)
+    /// - Body transfer encodings (base64, quoted-printable)
+    /// - Lenient parsing vs. strict validation
+    ///
+    /// ## Category Theory
+    ///
+    /// This is the fundamental parsing transformation:
+    /// - **Domain**: [UInt8] (RFC 5322 formatted bytes)
+    /// - **Codomain**: RFC_5322.Message (structured data)
+    ///
+    /// String-based parsing is derived as composition:
+    /// ```
+    /// String → [UInt8] (UTF-8 bytes) → Message
+    /// ```
+    ///
+    /// ## Implementation Strategy
+    ///
+    /// When implemented, this parser should:
+    /// 1. Split message into header section and body at first blank line (CRLF CRLF)
+    /// 2. Parse headers with unfolding (handle CRLF + whitespace)
+    /// 3. Extract required headers (From, To, Date, etc.)
+    /// 4. Preserve additional headers in order
+    /// 5. Handle MIME structure if present
+    /// 6. Decode body based on Content-Transfer-Encoding
+    ///
+    /// ## Example (Future)
+    ///
+    /// ```swift
+    /// let bytes = Array(emlFileContents.utf8)
+    /// let message = try RFC_5322.Message(ascii: bytes)
+    /// ```
+    ///
+    /// - Parameter bytes: The ASCII byte representation of an RFC 5322 message
+    /// - Throws: `RFC_5322.Message.Error` if the bytes are malformed
+    public init<Bytes: Collection>(ascii bytes: Bytes, in context: Void) throws(Error)
+    where Bytes.Element == UInt8 {
+        // TODO: Implement RFC 5322 message parsing
+        // This is a complex parser that must handle:
+        // - Header/body separation
+        // - Header unfolding
+        // - Required header extraction (From, To, Date, Subject)
+        // - Optional header handling (Cc, Bcc, Reply-To, Message-ID)
+        // - MIME structure parsing
+        // - Custom header preservation
+        // - Various encoding schemes
+
+        fatalError("RFC 5322 Message parsing not yet implemented")
     }
 }
 
