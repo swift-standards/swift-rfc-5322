@@ -33,7 +33,12 @@ extension RFC_5322.Header.Value {
 }
 
 extension RFC_5322.Header.Value: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+    public static func serialize<Buffer: RangeReplaceableCollection>(
+        ascii value: Self,
+        into buffer: inout Buffer
+    ) where Buffer.Element == UInt8 {
+        buffer.append(contentsOf: value.rawValue.utf8)
+    }
 
     /// Parses a header value from canonical byte representation (CANONICAL PRIMITIVE)
     ///

@@ -110,81 +110,79 @@ extension RFC_5322 {
 }
 
 extension RFC_5322.Message: UInt8.ASCII.Serializable {
-    static public func serialize(ascii message: RFC_5322.Message) -> [UInt8] {
+    static public func serialize<Buffer>(ascii message: RFC_5322.Message, into buffer: inout Buffer) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+        
         // Pre-allocate capacity to avoid reallocations
         // Rough estimate: headers (~500 bytes) + body
-        var result = [UInt8]()
-        result.reserveCapacity(500 + message.body.count)
+        buffer.reserveCapacity(500 + message.body.count)
 
         // Required headers in recommended order (RFC 5322 Section 3.6)
 
         // From (required)
-        result.append(contentsOf: [UInt8].fromPrefix)
-        result.append(contentsOf: [UInt8](message.from))
-        result.append(contentsOf: [UInt8].ascii.crlf)
+        buffer.append(contentsOf: [UInt8].fromPrefix)
+        buffer.append(contentsOf: [UInt8](message.from))
+        buffer.append(contentsOf: [UInt8].ascii.crlf)
 
         // To (required)
-        result.append(contentsOf: [UInt8].toPrefix)
+        buffer.append(contentsOf: [UInt8].toPrefix)
         var first = true
         for address in message.to {
-            if !first { result.append(contentsOf: [.ascii.comma, .ascii.space]) }
+            if !first { buffer.append(contentsOf: [.ascii.comma, .ascii.space]) }
             first = false
-            result.append(contentsOf: [UInt8](address))
+            buffer.append(contentsOf: [UInt8](address))
         }
-        result.append(contentsOf: [UInt8].ascii.crlf)
+        buffer.append(contentsOf: [UInt8].ascii.crlf)
 
         // Cc (optional)
         if let cc = message.cc, !cc.isEmpty {
-            result.append(contentsOf: [UInt8].ccPrefix)
+            buffer.append(contentsOf: [UInt8].ccPrefix)
             first = true
             for address in cc {
-                if !first { result.append(contentsOf: [.ascii.comma, .ascii.space]) }
+                if !first { buffer.append(contentsOf: [.ascii.comma, .ascii.space]) }
                 first = false
-                result.append(contentsOf: [UInt8](address))
+                buffer.append(contentsOf: [UInt8](address))
             }
-            result.append(contentsOf: [UInt8].ascii.crlf)
+            buffer.append(contentsOf: [UInt8].ascii.crlf)
         }
 
         // Subject (required in practice)
-        result.append(contentsOf: [UInt8].subjectPrefix)
-        result.append(utf8: message.subject)
-        result.append(contentsOf: [UInt8].ascii.crlf)
+        buffer.append(contentsOf: [UInt8].subjectPrefix)
+        buffer.append(utf8: message.subject)
+        buffer.append(contentsOf: [UInt8].ascii.crlf)
 
         // Date (required)
-        result.append(contentsOf: [UInt8].datePrefix)
-        result.append(contentsOf: [UInt8](message.date))
-        result.append(contentsOf: [UInt8].ascii.crlf)
+        buffer.append(contentsOf: [UInt8].datePrefix)
+        buffer.append(contentsOf: [UInt8](message.date))
+        buffer.append(contentsOf: [UInt8].ascii.crlf)
 
         // Message-ID (recommended)
-        result.append(contentsOf: [UInt8].messageIdPrefix)
-        result.append(contentsOf: [UInt8](message.messageId))
-        result.append(contentsOf: [UInt8].ascii.crlf)
+        buffer.append(contentsOf: [UInt8].messageIdPrefix)
+        buffer.append(contentsOf: [UInt8](message.messageId))
+        buffer.append(contentsOf: [UInt8].ascii.crlf)
 
         // Reply-To (optional)
         if let replyTo = message.replyTo {
-            result.append(contentsOf: [UInt8].replyToPrefix)
-            result.append(contentsOf: [UInt8](replyTo))
-            result.append(contentsOf: [UInt8].ascii.crlf)
+            buffer.append(contentsOf: [UInt8].replyToPrefix)
+            buffer.append(contentsOf: [UInt8](replyTo))
+            buffer.append(contentsOf: [UInt8].ascii.crlf)
         }
 
         // MIME-Version (required for MIME messages)
-        result.append(contentsOf: [UInt8].mimeVersionPrefix)
-        result.append(utf8: message.mimeVersion)
-        result.append(contentsOf: [UInt8].ascii.crlf)
+        buffer.append(contentsOf: [UInt8].mimeVersionPrefix)
+        buffer.append(utf8: message.mimeVersion)
+        buffer.append(contentsOf: [UInt8].ascii.crlf)
 
         // Additional custom headers (in order)
         for header in message.additionalHeaders {
-            result.append(contentsOf: [UInt8](header))
-            result.append(contentsOf: [UInt8].ascii.crlf)
+            buffer.append(contentsOf: [UInt8](header))
+            buffer.append(contentsOf: [UInt8].ascii.crlf)
         }
 
         // Empty line separates headers from body
-        result.append(contentsOf: [UInt8].ascii.crlf)
+        buffer.append(contentsOf: [UInt8].ascii.crlf)
 
         // Body (as bytes)
-        result.append(contentsOf: message.body)
-
-        return result
+        buffer.append(contentsOf: message.body)
     }
 
     /// Parses an RFC 5322 message from canonical byte representation (CANONICAL PRIMITIVE)

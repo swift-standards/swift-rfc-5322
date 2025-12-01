@@ -45,51 +45,50 @@ extension RFC_5322 {
 }
 
 extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
-    public static func serialize(ascii dateTime: RFC_5322.DateTime) -> [UInt8] {
+    static public func serialize<Buffer>(ascii dateTime: RFC_5322.DateTime, into buffer: inout Buffer) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
         let components = dateTime.components
 
-        var result = [UInt8]()
-        result.reserveCapacity(31)  // "Mon, 01 Jan 2024 12:34:56 +0000" = 31 bytes
+        buffer.reserveCapacity(31)  // "Mon, 01 Jan 2024 12:34:56 +0000" = 31 bytes
 
         // Day name (e.g., "Mon")
         let dayName = RFC_5322.DateTime.dayNames[components.weekday]
-        result.append(utf8: dayName)
-        result.append(.ascii.comma)
-        result.append(.ascii.space)
+        buffer.append(utf8: dayName)
+        buffer.append(.ascii.comma)
+        buffer.append(.ascii.space)
 
         // Day (zero-padded 2 digits)
         let day = components.day.zeroPaddedTwoDigits()
-        result.append(utf8: day)
-        result.append(.ascii.space)
+        buffer.append(utf8: day)
+        buffer.append(.ascii.space)
 
         // Month name (e.g., "Jan")
         let monthName = RFC_5322.DateTime.monthNames[components.month - 1]
-        result.append(utf8: monthName)
-        result.append(.ascii.space)
+        buffer.append(utf8: monthName)
+        buffer.append(.ascii.space)
 
         // Year (4 digits)
         let year = components.year.zeroPaddedFourDigits()
-        result.append(utf8: year)
-        result.append(.ascii.space)
+        buffer.append(utf8: year)
+        buffer.append(.ascii.space)
 
         // Hour (zero-padded 2 digits)
         let hour = components.hour.zeroPaddedTwoDigits()
-        result.append(utf8: hour)
-        result.append(.ascii.colon)
+        buffer.append(utf8: hour)
+        buffer.append(.ascii.colon)
 
         // Minute (zero-padded 2 digits)
         let minute = components.minute.zeroPaddedTwoDigits()
-        result.append(utf8: minute)
-        result.append(.ascii.colon)
+        buffer.append(utf8: minute)
+        buffer.append(.ascii.colon)
 
         // Second (zero-padded 2 digits)
         let second = components.second.zeroPaddedTwoDigits()
-        result.append(utf8: second)
-        result.append(.ascii.space)
+        buffer.append(utf8: second)
+        buffer.append(.ascii.space)
 
         // Timezone offset
         let offsetSign = dateTime.timezoneOffsetSeconds >= 0 ? "+" : "-"
-        result.append(utf8: offsetSign)
+        buffer.append(utf8: offsetSign)
 
         let offsetHours =
             abs(dateTime.timezoneOffsetSeconds)
@@ -100,12 +99,10 @@ extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
             / Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
 
         let offsetHoursStr = offsetHours.zeroPaddedTwoDigits()
-        result.append(utf8: offsetHoursStr)
+        buffer.append(utf8: offsetHoursStr)
 
         let offsetMinutesStr = offsetMinutes.zeroPaddedTwoDigits()
-        result.append(utf8: offsetMinutesStr)
-
-        return result
+        buffer.append(utf8: offsetMinutesStr)
     }
 
     /// Parses RFC 5322 date-time from canonical byte representation (CANONICAL PRIMITIVE)

@@ -53,13 +53,11 @@ extension RFC_5322 {
 // MARK: - Header Parsing
 
 extension RFC_5322.Header: UInt8.ASCII.Serializable {
-    static public func serialize(ascii header: RFC_5322.Header) -> [UInt8] {
-        var result = [UInt8]()
-        result.append(contentsOf: [UInt8](header.name))
-        result.append(.ascii.colon)
-        result.append(.ascii.space)
-        result.append(contentsOf: [UInt8](header.value))
-        return result
+    public static func serialize<Buffer>(ascii header: RFC_5322.Header, into buffer: inout Buffer) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+        buffer.append(contentsOf: [UInt8](header.name))
+        buffer.append(.ascii.colon)
+        buffer.append(.ascii.space)
+        buffer.append(contentsOf: [UInt8](header.value))
     }
 
     /// Parses a header from canonical byte representation (CANONICAL PRIMITIVE)
