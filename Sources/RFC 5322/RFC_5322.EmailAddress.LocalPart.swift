@@ -24,10 +24,10 @@ extension RFC_5322.EmailAddress.LocalPart {
 }
 
 extension RFC_5322.EmailAddress.LocalPart: UInt8.ASCII.Serializable {
-    static public func serialize(ascii localPart: RFC_5322.EmailAddress.LocalPart) -> [UInt8] {
+    public static func serialize<Buffer>(ascii localPart: RFC_5322.EmailAddress.LocalPart, into buffer: inout Buffer) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
         switch localPart.storage {
         case .dotAtom(let bytes), .quoted(let bytes):
-            return bytes
+            buffer.append(contentsOf: bytes)
         }
     }
 
@@ -132,11 +132,8 @@ extension RFC_5322.EmailAddress.LocalPart: UInt8.ASCII.Serializable {
                 }
                 previousByte = byte
 
-                // Validate character
-                let isValid =
-                    byte.ascii.isLetter || byte.ascii.isDigit || byte == .ascii.period
-                    || "!#$%&'*+-/=?^_`{|}~".utf8.contains(byte)
-                guard isValid else {
+                // Validate character: atext or period
+                guard byte == .ascii.period || RFC_5322.isAtext(byte) else {
                     throw Error.invalidDotAtom
                 }
             }

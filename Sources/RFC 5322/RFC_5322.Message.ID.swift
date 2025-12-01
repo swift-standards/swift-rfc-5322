@@ -40,16 +40,16 @@ extension RFC_5322.Message {
 }
 
 extension RFC_5322.Message.ID: UInt8.ASCII.Serializable {
-    static public func serialize(ascii messageId: RFC_5322.Message.ID) -> [UInt8] {
-        var result = [UInt8]()
-        result.reserveCapacity(messageId.value.count + 2)  // +2 for angle brackets
+    static public func serialize<Buffer>(
+        ascii messageId: RFC_5322.Message.ID,
+        into buffer: inout Buffer
+    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+        buffer.reserveCapacity(messageId.value.count + 2)  // +2 for angle brackets
 
         // Always include angle brackets per RFC 5322
-        result.append(.ascii.lt)
-        result.append(contentsOf: messageId.value)
-        result.append(.ascii.gt)
-
-        return result
+        buffer.append(.ascii.lt)
+        buffer.append(contentsOf: messageId.value)
+        buffer.append(.ascii.gt)
     }
 
     /// Parses a Message-ID from canonical byte representation (CANONICAL PRIMITIVE)

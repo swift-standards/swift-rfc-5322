@@ -34,9 +34,10 @@ extension RFC_5322 {
 }
 
 extension RFC_5322.EmailAddress: UInt8.ASCII.Serializable {
-    static public func serialize(ascii emailAddress: RFC_5322.EmailAddress) -> [UInt8] {
-        var result = [UInt8]()
-
+    public static func serialize<Buffer: RangeReplaceableCollection>(
+        ascii emailAddress: RFC_5322.EmailAddress,
+        into buffer: inout Buffer
+    ) where Buffer.Element == UInt8 {
         if let displayName = emailAddress.displayName {
             // Check if quoting is needed for display name
             let needsQuoting = displayName.contains(where: {
@@ -45,32 +46,30 @@ extension RFC_5322.EmailAddress: UInt8.ASCII.Serializable {
             })
 
             if needsQuoting {
-                result.append(.ascii.dquote)
-                result.append(utf8: displayName)
-                result.append(.ascii.dquote)
+                buffer.append(UInt8.ascii.quotationMark)
+                buffer.append(contentsOf: displayName.utf8)
+                buffer.append(UInt8.ascii.quotationMark)
             } else {
-                result.append(utf8: displayName)
+                buffer.append(contentsOf: displayName.utf8)
             }
 
-            result.append(.ascii.space)
-            result.append(.ascii.lt)
+            buffer.append(UInt8.ascii.space)
+            buffer.append(UInt8.ascii.lessThanSign)
 
             // Serialize local-part through bytes
-            result.append(contentsOf: [UInt8](emailAddress.localPart))
-            result.append(.ascii.at)
+            RFC_5322.EmailAddress.LocalPart.serialize(ascii: emailAddress.localPart, into: &buffer)
+            buffer.append(UInt8.ascii.commercialAt)
 
             // Serialize domain through bytes
-            result.append(contentsOf: [UInt8](emailAddress.domain))
+            RFC_1123.Domain.serialize(ascii: emailAddress.domain, into: &buffer)
 
-            result.append(.ascii.gt)
+            buffer.append(UInt8.ascii.greaterThanSign)
         } else {
             // Simple format without display name
-            result.append(contentsOf: [UInt8](emailAddress.localPart))
-            result.append(.ascii.at)
-            result.append(contentsOf: [UInt8](emailAddress.domain))
+            RFC_5322.EmailAddress.LocalPart.serialize(ascii: emailAddress.localPart, into: &buffer)
+            buffer.append(UInt8.ascii.commercialAt)
+            RFC_1123.Domain.serialize(ascii: emailAddress.domain, into: &buffer)
         }
-
-        return result
     }
 
     /// Parses email address from canonical byte representation (CANONICAL PRIMITIVE)
@@ -118,10 +117,10 @@ extension RFC_5322.EmailAddress: UInt8.ASCII.Serializable {
         var gtOffset: Int?
 
         for (i, byte) in bytes.enumerated() {
-            if byte == .ascii.lt && ltOffset == nil {
+            if byte == UInt8.ascii.lessThanSign && ltOffset == nil {
                 ltOffset = i
             }
-            if byte == .ascii.gt {
+            if byte == UInt8.ascii.greaterThanSign {
                 gtOffset = i
             }
         }
@@ -140,7 +139,7 @@ extension RFC_5322.EmailAddress: UInt8.ASCII.Serializable {
                 var trailingWhitespace = [UInt8]()
 
                 for byte in displayNameBytes {
-                    if byte == .ascii.space || byte == .ascii.htab {
+                    if byte == UInt8.ascii.space || byte == UInt8.ascii.htab {
                         if foundNonWhitespace {
                             trailingWhitespace.append(byte)
                         }
@@ -171,7 +170,7 @@ extension RFC_5322.EmailAddress: UInt8.ASCII.Serializable {
             }
 
             // Parse email part (local@domain)
-            guard let atIdx = emailBytes.firstIndex(of: .ascii.at) else {
+            guard let atIdx = emailBytes.firstIndex(of: UInt8.ascii.commercialAt) else {
                 throw Error.missingAtSign
             }
 
@@ -185,7 +184,7 @@ extension RFC_5322.EmailAddress: UInt8.ASCII.Serializable {
             self.init(displayName: displayName, localPart: localPartValue, domain: domainValue)
         } else {
             // Simple format: local@domain
-            guard let atIdx = bytes.firstIndex(of: .ascii.at) else {
+            guard let atIdx = bytes.firstIndex(of: UInt8.ascii.commercialAt) else {
                 throw Error.missingAtSign
             }
 
@@ -239,7 +238,8 @@ extension RFC_5322.EmailAddress: Codable {
     }
 }
 
-extension RFC_5322.EmailAddress: RawRepresentable {
-    public var rawValue: String { String(self) }
+extension RFC_5322.EmailAddress: CustomStringConvertible {}
+
+extension RFC_5322.EmailAddress: UInt8.ASCII.RawRepresentable {
     public init?(rawValue: String) { try? self.init(rawValue) }
 }
