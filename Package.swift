@@ -34,9 +34,9 @@ let package = Package(
         .library(name: .rfc5322Foundation, targets: [.rfc5322Foundation]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-standards/swift-rfc-1123.git", from: "0.3.1"),
-        .package(url: "https://github.com/swift-standards/swift-standards.git", from: "0.7.0"),
-        .package(url: "https://github.com/swift-standards/swift-incits-4-1986.git", from: "0.4.0"),
+        .package(url: "https://github.com/swift-standards/swift-rfc-1123.git", from: "0.4.0"),
+        .package(url: "https://github.com/swift-standards/swift-standards.git", from: "0.8.0"),
+        .package(url: "https://github.com/swift-standards/swift-incits-4-1986.git", from: "0.6.0"),
     ],
     targets: [
         .target(

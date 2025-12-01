@@ -110,8 +110,9 @@ extension RFC_5322 {
 }
 
 extension RFC_5322.Message: UInt8.ASCII.Serializable {
-    static public func serialize<Buffer>(ascii message: RFC_5322.Message, into buffer: inout Buffer) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
-        
+    static public func serialize<Buffer>(ascii message: RFC_5322.Message, into buffer: inout Buffer)
+    where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
+
         // Pre-allocate capacity to avoid reallocations
         // Rough estimate: headers (~500 bytes) + body
         buffer.reserveCapacity(500 + message.body.count)

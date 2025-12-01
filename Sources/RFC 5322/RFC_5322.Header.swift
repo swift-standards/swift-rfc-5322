@@ -53,7 +53,8 @@ extension RFC_5322 {
 // MARK: - Header Parsing
 
 extension RFC_5322.Header: UInt8.ASCII.Serializable {
-    public static func serialize<Buffer>(ascii header: RFC_5322.Header, into buffer: inout Buffer) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+    public static func serialize<Buffer>(ascii header: RFC_5322.Header, into buffer: inout Buffer)
+    where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
         buffer.append(contentsOf: [UInt8](header.name))
         buffer.append(.ascii.colon)
         buffer.append(.ascii.space)

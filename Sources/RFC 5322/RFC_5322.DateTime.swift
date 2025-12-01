@@ -45,7 +45,10 @@ extension RFC_5322 {
 }
 
 extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
-    static public func serialize<Buffer>(ascii dateTime: RFC_5322.DateTime, into buffer: inout Buffer) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+    static public func serialize<Buffer>(
+        ascii dateTime: RFC_5322.DateTime,
+        into buffer: inout Buffer
+    ) where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
         let components = dateTime.components
 
         buffer.reserveCapacity(31)  // "Mon, 01 Jan 2024 12:34:56 +0000" = 31 bytes

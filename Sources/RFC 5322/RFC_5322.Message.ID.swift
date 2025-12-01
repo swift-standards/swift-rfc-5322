@@ -43,7 +43,7 @@ extension RFC_5322.Message.ID: UInt8.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii messageId: RFC_5322.Message.ID,
         into buffer: inout Buffer
-    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+    ) where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
         buffer.reserveCapacity(messageId.value.count + 2)  // +2 for angle brackets
 
         // Always include angle brackets per RFC 5322

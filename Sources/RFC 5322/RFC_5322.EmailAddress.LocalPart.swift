@@ -24,7 +24,10 @@ extension RFC_5322.EmailAddress.LocalPart {
 }
 
 extension RFC_5322.EmailAddress.LocalPart: UInt8.ASCII.Serializable {
-    public static func serialize<Buffer>(ascii localPart: RFC_5322.EmailAddress.LocalPart, into buffer: inout Buffer) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+    public static func serialize<Buffer>(
+        ascii localPart: RFC_5322.EmailAddress.LocalPart,
+        into buffer: inout Buffer
+    ) where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
         switch localPart.storage {
         case .dotAtom(let bytes), .quoted(let bytes):
             buffer.append(contentsOf: bytes)
