@@ -1,0 +1,69 @@
+{
+  "originHash" : "342d1188b787cb13be6255b601fd6c687c5f593a0bcb209f98561488b86bb04c",
+  "pins" : [
+    {
+      "identity" : "swift-incits-4-1986",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swift-standards/swift-incits-4-1986.git",
+      "state" : {
+        "revision" : "115caab78c68c5e42774a92aeb1c40bd6719bfac",
+        "version" : "0.6.2"
+      }
+    },
+    {
+      "identity" : "swift-memory-allocation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/coenttb/swift-memory-allocation",
+      "state" : {
+        "revision" : "0efbfb98b4a9dbc958e7c45b4f5a5cfa29cdbcb8",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "swift-numerics",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-numerics",
+      "state" : {
+        "revision" : "0c0290ff6b24942dadb83a929ffaaa1481df04a2",
+        "version" : "1.1.1"
+      }
+    },
+    {
+      "identity" : "swift-rfc-1035",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swift-standards/swift-rfc-1035",
+      "state" : {
+        "revision" : "9ff8b2e27ff0c27923d82ceca1c181387219f9d8",
+        "version" : "0.3.0"
+      }
+    },
+    {
+      "identity" : "swift-rfc-1123",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swift-standards/swift-rfc-1123.git",
+      "state" : {
+        "revision" : "552b5170bd2614e4b673573d89b18b511ba591d6",
+        "version" : "0.5.1"
+      }
+    },
+    {
+      "identity" : "swift-standards",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swift-standards/swift-standards.git",
+      "state" : {
+        "revision" : "ccbf4e4c18f793bc858950d275624c1ef2a981a5",
+        "version" : "0.10.0"
+      }
+    },
+    {
+      "identity" : "swift-testing-performance",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/coenttb/swift-testing-performance",
+      "state" : {
+        "revision" : "3694d3733ba9d6f8035c48fe48ab189be840da61",
+        "version" : "0.1.1"
+      }
+    }
+  ],
+  "version" : 3
+}
