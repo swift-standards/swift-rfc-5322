@@ -37,7 +37,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/swift-standards/swift-rfc-1123", from: "0.5.2"),
         .package(url: "https://github.com/swift-standards/swift-standards", from: "0.10.0"),
-        .package(url: "https://github.com/swift-standards/swift-incits-4-1986", from: "0.6.2"),
+        .package(url: "https://github.com/swift-standards/swift-incits-4-1986", from: "0.6.3"),
     ],
     targets: [
         .target(
