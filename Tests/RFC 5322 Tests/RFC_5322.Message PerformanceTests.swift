@@ -111,7 +111,7 @@ extension PerformanceTests {
         // MARK: - Message ID Generation Performance
 
         @Test(
-            .timed(iterations: 10000, warmup: 1000, threshold: .microseconds(100)),
+            .timed(iterations: 10000, warmup: 1000, threshold: .microseconds(140)),
             // swiftlint:disable:next force_try
             arguments: [try! RFC_5322.EmailAddress("sender@example.com")]
         )

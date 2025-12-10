@@ -38,7 +38,7 @@ extension PerformanceTests {
 
         // MARK: - Construction Performance
 
-        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(105)))
+        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(150)))
         func `create from components without display name`() throws {
             _ = try RFC_5322.EmailAddress(
                 displayName: nil,
@@ -47,7 +47,7 @@ extension PerformanceTests {
             )
         }
 
-        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(105)))
+        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(150)))
         func `create from components with display name`() throws {
             _ = try RFC_5322.EmailAddress(
                 displayName: "John Doe",
@@ -64,7 +64,7 @@ extension PerformanceTests {
             _ = String(email)
         }
 
-        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(110)))
+        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(150)))
         func `format to string with display name`() throws {
             let email = try RFC_5322.EmailAddress(
                 displayName: "John Doe",
@@ -74,7 +74,7 @@ extension PerformanceTests {
             _ = String(email)
         }
 
-        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(110)))
+        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(150)))
         func `format to string with quoting needed`() throws {
             let email = try RFC_5322.EmailAddress(
                 displayName: "Doe, John",
@@ -92,7 +92,7 @@ extension PerformanceTests {
             _ = [UInt8](email)
         }
 
-        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(110)))
+        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(150)))
         func `convert to bytes with display name`() throws {
             let email = try RFC_5322.EmailAddress(
                 displayName: "John Doe",

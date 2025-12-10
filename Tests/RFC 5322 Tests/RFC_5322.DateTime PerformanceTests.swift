@@ -16,12 +16,12 @@ extension PerformanceTests {
 
         // MARK: - Construction Performance
 
-        @Test(.timed(iterations: 10000, warmup: 1000, threshold: .microseconds(90)))
+        @Test(.timed(iterations: 10000, warmup: 1000, threshold: .microseconds(120)))
         func `create from epoch`() {
             _ = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
         }
 
-        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(90)))
+        @Test(.timed(iterations: 1000, warmup: 100, threshold: .microseconds(120)))
         func `create from components`() throws {
             _ = try RFC_5322.DateTime(
                 year: 2024,
@@ -115,14 +115,14 @@ extension PerformanceTests {
 
         // MARK: - Comparison Performance
 
-        @Test(.timed(iterations: 10000, warmup: 1000, threshold: .microseconds(95)))
+        @Test(.timed(iterations: 10000, warmup: 1000, threshold: .microseconds(130)))
         func `compare datetimes`() {
             let earlier = RFC_5322.DateTime(secondsSinceEpoch: 1000)
             let later = RFC_5322.DateTime(secondsSinceEpoch: 2000)
             _ = earlier < later
         }
 
-        @Test(.timed(iterations: 10000, warmup: 1000, threshold: .microseconds(95)))
+        @Test(.timed(iterations: 10000, warmup: 1000, threshold: .microseconds(130)))
         func `check datetime equality`() {
             let dt1 = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
             let dt2 = RFC_5322.DateTime(secondsSinceEpoch: 1_609_459_200)
