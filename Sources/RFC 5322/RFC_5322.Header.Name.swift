@@ -81,7 +81,7 @@ extension RFC_5322.Header.Name: Hashable {
     }
 }
 
-extension RFC_5322.Header.Name: UInt8.ASCII.Serializable {
+extension RFC_5322.Header.Name: Binary.ASCII.Serializable {
     public static func serialize<Buffer: RangeReplaceableCollection>(
         ascii name: Self,
         into buffer: inout Buffer
@@ -171,7 +171,7 @@ extension [UInt8] {
     }
 }
 
-extension RFC_5322.Header.Name: UInt8.ASCII.RawRepresentable {}
+extension RFC_5322.Header.Name: Binary.ASCII.RawRepresentable {}
 
 extension RFC_5322.Header.Name: CustomStringConvertible {}
 
