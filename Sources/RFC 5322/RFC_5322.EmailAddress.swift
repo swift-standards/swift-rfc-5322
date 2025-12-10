@@ -33,7 +33,7 @@ extension RFC_5322 {
     }
 }
 
-extension RFC_5322.EmailAddress: UInt8.ASCII.Serializable {
+extension RFC_5322.EmailAddress: Binary.ASCII.Serializable {
     public static func serialize<Buffer: RangeReplaceableCollection>(
         ascii emailAddress: RFC_5322.EmailAddress,
         into buffer: inout Buffer
@@ -240,6 +240,6 @@ extension RFC_5322.EmailAddress: Codable {
 
 extension RFC_5322.EmailAddress: CustomStringConvertible {}
 
-extension RFC_5322.EmailAddress: UInt8.ASCII.RawRepresentable {
+extension RFC_5322.EmailAddress: Binary.ASCII.RawRepresentable {
     public init?(rawValue: String) { try? self.init(rawValue) }
 }

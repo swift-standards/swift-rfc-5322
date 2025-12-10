@@ -39,7 +39,7 @@ extension RFC_5322.Message {
     }
 }
 
-extension RFC_5322.Message.ID: UInt8.ASCII.Serializable {
+extension RFC_5322.Message.ID: Binary.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii messageId: RFC_5322.Message.ID,
         into buffer: inout Buffer

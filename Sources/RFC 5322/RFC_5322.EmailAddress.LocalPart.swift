@@ -23,7 +23,7 @@ extension RFC_5322.EmailAddress.LocalPart {
     }
 }
 
-extension RFC_5322.EmailAddress.LocalPart: UInt8.ASCII.Serializable {
+extension RFC_5322.EmailAddress.LocalPart: Binary.ASCII.Serializable {
     public static func serialize<Buffer>(
         ascii localPart: RFC_5322.EmailAddress.LocalPart,
         into buffer: inout Buffer

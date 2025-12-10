@@ -44,7 +44,7 @@ extension RFC_5322 {
     public typealias Date = RFC_5322.DateTime
 }
 
-extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
+extension RFC_5322.DateTime: Binary.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii dateTime: RFC_5322.DateTime,
         into buffer: inout Buffer
@@ -60,7 +60,7 @@ extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
         buffer.append(.ascii.space)
 
         // Day (zero-padded 2 digits)
-        let day = components.day.zeroPaddedTwoDigits()
+        let day = components.day.formatted(.number.zeroPadded(width: 2))
         buffer.append(utf8: day)
         buffer.append(.ascii.space)
 
@@ -70,22 +70,22 @@ extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
         buffer.append(.ascii.space)
 
         // Year (4 digits)
-        let year = components.year.zeroPaddedFourDigits()
+        let year = components.year.formatted(.number.zeroPadded(width: 4))
         buffer.append(utf8: year)
         buffer.append(.ascii.space)
 
         // Hour (zero-padded 2 digits)
-        let hour = components.hour.zeroPaddedTwoDigits()
+        let hour = components.hour.formatted(.number.zeroPadded(width: 2))
         buffer.append(utf8: hour)
         buffer.append(.ascii.colon)
 
         // Minute (zero-padded 2 digits)
-        let minute = components.minute.zeroPaddedTwoDigits()
+        let minute = components.minute.formatted(.number.zeroPadded(width: 2))
         buffer.append(utf8: minute)
         buffer.append(.ascii.colon)
 
         // Second (zero-padded 2 digits)
-        let second = components.second.zeroPaddedTwoDigits()
+        let second = components.second.formatted(.number.zeroPadded(width: 2))
         buffer.append(utf8: second)
         buffer.append(.ascii.space)
 
@@ -101,10 +101,10 @@ extension RFC_5322.DateTime: UInt8.ASCII.Serializable {
                 % Time.Calendar.Gregorian.TimeConstants.secondsPerHour)
             / Time.Calendar.Gregorian.TimeConstants.secondsPerMinute
 
-        let offsetHoursStr = offsetHours.zeroPaddedTwoDigits()
+        let offsetHoursStr = offsetHours.formatted(.number.zeroPadded(width: 2))
         buffer.append(utf8: offsetHoursStr)
 
-        let offsetMinutesStr = offsetMinutes.zeroPaddedTwoDigits()
+        let offsetMinutesStr = offsetMinutes.formatted(.number.zeroPadded(width: 2))
         buffer.append(utf8: offsetMinutesStr)
     }
 
