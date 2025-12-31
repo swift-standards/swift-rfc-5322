@@ -138,7 +138,8 @@ extension RFC_5322.EmailAddress: Binary.ASCII.Serializable {
                 var foundNonWhitespace = false
                 var trailingWhitespace = [UInt8]()
 
-                for byte in displayNameBytes {
+                for i in 0..<displayNameBytes.count {
+                    let byte = displayNameBytes[i]
                     if byte == UInt8.ascii.space || byte == UInt8.ascii.htab {
                         if foundNonWhitespace {
                             trailingWhitespace.append(byte)
