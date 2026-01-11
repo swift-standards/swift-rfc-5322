@@ -5,8 +5,8 @@
 // Format: "Mon, 01 Jan 2024 12:34:56 +0000"
 
 import INCITS_4_1986
-public import StandardTime
-import Standards
+public import Time_Primitives
+import Standard_Library_Extensions
 
 extension RFC_5322 {
     /// RFC 5322 date-time representation

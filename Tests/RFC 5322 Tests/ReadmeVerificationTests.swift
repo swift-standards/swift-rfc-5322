@@ -6,7 +6,7 @@
 //
 
 import RFC_5322
-import Standards
+import Standard_Library_Extensions
 import Testing
 
 @Suite

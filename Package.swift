@@ -11,13 +11,14 @@ extension Target.Dependency {
     static var rfc5322: Self { .target(name: .rfc5322) }
     static var rfc5322Foundation: Self { .target(name: .rfc5322Foundation) }
     static var rfc1123: Self { .product(name: "RFC 1123", package: "swift-rfc-1123") }
-    static var standards: Self { .product(name: "Standards", package: "swift-standards") }
-    static var time: Self { .product(name: "StandardTime", package: "swift-standards") }
+    static var standards: Self { .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions") }
+    static var binary: Self { .product(name: "Binary Primitives", package: "swift-binary-primitives") }
+    static var time: Self { .product(name: "Time Primitives", package: "swift-time-primitives") }
     static var incits_4_1986: Self {
         .product(name: "INCITS 4 1986", package: "swift-incits-4-1986")
     }
     static var standardsTestSupport: Self {
-        .product(name: "StandardsTestSupport", package: "swift-standards")
+        .product(name: "Test Primitives", package: "swift-test-primitives")
     }
 }
 
@@ -35,15 +36,19 @@ let package = Package(
         .library(name: .rfc5322Foundation, targets: [.rfc5322Foundation]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-standards/swift-rfc-1123", from: "0.5.2"),
-        .package(url: "https://github.com/swift-standards/swift-standards", from: "0.10.0"),
-        .package(url: "https://github.com/swift-standards/swift-incits-4-1986", from: "0.6.3"),
+        .package(path: "../swift-rfc-1123"),
+        .package(path: "../../swift-primitives/swift-standard-library-extensions"),
+        .package(path: "../../swift-primitives/swift-binary-primitives"),
+        .package(path: "../../swift-primitives/swift-time-primitives"),
+        .package(path: "../../swift-primitives/swift-test-primitives"),
+        .package(path: "../swift-incits-4-1986"),
     ],
     targets: [
         .target(
             name: .rfc5322,
             dependencies: [
                 .standards,
+                .binary,
                 .time,
                 .rfc1123,
                 .incits_4_1986,

@@ -7,8 +7,8 @@
 
 import INCITS_4_1986
 import RFC_1123
-import StandardTime
-import Standards
+import Time_Primitives
+import Standard_Library_Extensions
 
 // MARK: - Constants
 

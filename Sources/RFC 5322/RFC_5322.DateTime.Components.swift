@@ -5,7 +5,7 @@
 //  Created by Coen ten Thije Boonkkamp on 18/11/2025.
 //
 
-import StandardTime
+import Time_Primitives
 
 extension RFC_5322.Date {
 
