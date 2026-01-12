@@ -1,4 +1,4 @@
-import INCITS_4_1986
+import ASCII
 
 extension RFC_5322 {
     /// Email header field (name-value pair)

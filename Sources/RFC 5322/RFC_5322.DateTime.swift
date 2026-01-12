@@ -4,7 +4,7 @@
 // RFC 5322 date-time representation and formatting
 // Format: "Mon, 01 Jan 2024 12:34:56 +0000"
 
-import INCITS_4_1986
+import ASCII
 public import Time_Primitives
 import Standard_Library_Extensions
 

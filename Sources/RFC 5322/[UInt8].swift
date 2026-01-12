@@ -5,7 +5,7 @@
 //  Type conversions for RFC 5322 Message
 //
 
-import INCITS_4_1986
+import ASCII
 import RFC_1123
 import Time_Primitives
 import Standard_Library_Extensions

@@ -5,7 +5,7 @@
 //  Tests for [UInt8] extension initializers for byte-level conversions
 //
 
-import INCITS_4_1986
+import ASCII
 import Testing
 
 @testable import RFC_5322

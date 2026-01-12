@@ -5,7 +5,7 @@
 //  Created by Coen ten Thije Boonkkamp on 12/11/2025.
 //
 
-import INCITS_4_1986
+import ASCII
 import RFC_1123
 import Standard_Library_Extensions
 

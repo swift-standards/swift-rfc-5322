@@ -5,7 +5,7 @@
 //  Created by Coen ten Thije Boonkkamp on 21/11/2025.
 //
 
-@_exported public import INCITS_4_1986
+@_exported public import ASCII
 @_exported public import Standard_Library_Extensions
 @_exported public import Binary_Primitives
 

@@ -15,10 +15,10 @@ extension Target.Dependency {
     static var binary: Self { .product(name: "Binary Primitives", package: "swift-binary-primitives") }
     static var time: Self { .product(name: "Time Primitives", package: "swift-time-primitives") }
     static var incits_4_1986: Self {
-        .product(name: "INCITS 4 1986", package: "swift-incits-4-1986")
+        .product(name: "ASCII", package: "swift-ascii")
     }
-    static var standardsTestSupport: Self {
-        .product(name: "Test Primitives", package: "swift-test-primitives")
+    static var testingExtras: Self {
+        .product(name: "Testing Extras", package: "swift-testing-extras")
     }
 }
 
@@ -40,8 +40,8 @@ let package = Package(
         .package(path: "../../swift-primitives/swift-standard-library-extensions"),
         .package(path: "../../swift-primitives/swift-binary-primitives"),
         .package(path: "../../swift-primitives/swift-time-primitives"),
-        .package(path: "../../swift-primitives/swift-test-primitives"),
-        .package(path: "../swift-incits-4-1986"),
+        .package(path: "../../swift-foundations/swift-testing-extras"),
+        .package(path: "../../swift-foundations/swift-ascii"),
     ],
     targets: [
         .target(
@@ -66,7 +66,7 @@ let package = Package(
                 .rfc5322,
                 .time,
                 .incits_4_1986,
-                .standardsTestSupport,
+                .testingExtras,
             ]
         ),
         .testTarget(
