@@ -36,12 +36,12 @@ let package = Package(
         .library(name: .rfc5322Foundation, targets: [.rfc5322Foundation]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-standards/swift-rfc-1123.git", from: "0.0.1"),
-        .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", from: "0.0.1"),
-        .package(url: "https://github.com/swift-primitives/swift-binary-primitives.git", from: "0.0.1"),
-        .package(url: "https://github.com/swift-primitives/swift-time-primitives.git", from: "0.0.1"),
-        .package(url: "https://github.com/swift-foundations/swift-testing-extras.git", from: "0.0.1"),
-        .package(url: "https://github.com/swift-foundations/swift-ascii.git", from: "0.0.1"),
+        .package(path: "../swift-rfc-1123"),
+        .package(path: "../../swift-primitives/swift-standard-library-extensions"),
+        .package(path: "../../swift-primitives/swift-binary-primitives"),
+        .package(path: "../../swift-primitives/swift-time-primitives"),
+        .package(path: "../../swift-foundations/swift-testing-extras"),
+        .package(path: "../../swift-foundations/swift-ascii"),
     ],
     targets: [
         .target(
