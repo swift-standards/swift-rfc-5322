@@ -5,7 +5,7 @@
 //  Performance tests for RFC_5322.Message
 //
 
-import Testing_Extras
+import Testing
 import Testing
 
 @testable import RFC_5322

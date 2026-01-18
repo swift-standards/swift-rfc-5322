@@ -18,7 +18,7 @@ extension Target.Dependency {
         .product(name: "ASCII", package: "swift-ascii")
     }
     static var testingExtras: Self {
-        .product(name: "Testing Extras", package: "swift-testing-extras")
+        .product(name: "Testing", package: "swift-testing")
     }
 }
 
@@ -29,54 +29,36 @@ let package = Package(
         .iOS(.v26),
         .tvOS(.v26),
         .watchOS(.v26),
-        .visionOS(.v26),
+        .visionOS(.v26)
     ],
     products: [
-        .library(name: .rfc5322, targets: [.rfc5322]),
-        .library(name: .rfc5322Foundation, targets: [.rfc5322Foundation]),
+        .library(name: "RFC 5322", targets: ["RFC 5322"]),
+        .library(name: "RFC 5322 Foundation", targets: ["RFC 5322 Foundation"])
     ],
     dependencies: [
         .package(path: "../swift-rfc-1123"),
         .package(path: "../../swift-primitives/swift-standard-library-extensions"),
         .package(path: "../../swift-primitives/swift-binary-primitives"),
         .package(path: "../../swift-primitives/swift-time-primitives"),
-        .package(path: "../../swift-foundations/swift-testing-extras"),
-        .package(path: "../../swift-foundations/swift-ascii"),
+        .package(path: "../../swift-foundations/swift-ascii")
     ],
     targets: [
         .target(
-            name: .rfc5322,
+            name: "RFC 5322",
             dependencies: [
                 .standards,
                 .binary,
                 .time,
                 .rfc1123,
-                .incits_4_1986,
+                .incits_4_1986
             ]
         ),
         .target(
-            name: .rfc5322Foundation,
+            name: "RFC 5322 Foundation",
             dependencies: [
                 .rfc5322
             ]
-        ),
-        .testTarget(
-            name: .rfc5322.tests,
-            dependencies: [
-                .rfc5322,
-                .time,
-                .incits_4_1986,
-                .testingExtras,
-            ]
-        ),
-        .testTarget(
-            name: .rfc5322Foundation.tests,
-            dependencies: [
-                .rfc5322,
-                .rfc5322Foundation,
-                .time,
-            ]
-        ),
+        )
     ],
     swiftLanguageModes: [.v6]
 )
@@ -92,6 +74,6 @@ for target in package.targets where ![.system, .binary, .plugin].contains(target
         existing + [
             .enableUpcomingFeature("ExistentialAny"),
             .enableUpcomingFeature("InternalImportsByDefault"),
-            .enableUpcomingFeature("MemberImportVisibility"),
+            .enableUpcomingFeature("MemberImportVisibility")
         ]
 }
