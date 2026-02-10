@@ -27,13 +27,13 @@ extension RFC_5322 {
         /// Timezone offset from UTC
         /// Positive values are east of UTC, negative values are west
         /// Example: +0100 = 1 hour, -0500 = -5 hours
-        public let timezoneOffset: Time.TimezoneOffset
+        public let timezoneOffset: Time.Timezone.Offset
 
         /// Create a date-time from Time and timezone offset
         /// - Parameters:
         ///   - time: The UTC time
         ///   - timezoneOffset: Timezone offset (default: UTC)
-        public init(time: Time, timezoneOffset: Time.TimezoneOffset = .utc) {
+        public init(time: Time, timezoneOffset: Time.Timezone.Offset = .utc) {
             self.time = time
             self.timezoneOffset = timezoneOffset
         }
@@ -312,7 +312,7 @@ extension RFC_5322.DateTime {
     ///   - timezoneOffsetSeconds: Timezone offset in seconds (default: 0 for UTC)
     public init(secondsSinceEpoch: Int, timezoneOffsetSeconds: Int = 0) {
         self.time = Time(secondsSinceEpoch: secondsSinceEpoch)
-        self.timezoneOffset = Time.TimezoneOffset(seconds: timezoneOffsetSeconds)
+        self.timezoneOffset = Time.Timezone.Offset(seconds: timezoneOffsetSeconds)
     }
 }
 
@@ -349,7 +349,7 @@ extension RFC_5322.DateTime {
             second: second
         )
 
-        self.init(time: time, timezoneOffset: Time.TimezoneOffset(seconds: timezoneOffsetSeconds))
+        self.init(time: time, timezoneOffset: Time.Timezone.Offset(seconds: timezoneOffsetSeconds))
     }
 }
 
