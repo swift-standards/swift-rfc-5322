@@ -40,7 +40,8 @@ let package = Package(
         .package(path: "../../swift-primitives/swift-standard-library-extensions"),
         .package(path: "../../swift-primitives/swift-binary-primitives"),
         .package(path: "../../swift-primitives/swift-time-primitives"),
-        .package(path: "../../swift-foundations/swift-ascii")
+        .package(path: "../../swift-foundations/swift-ascii"),
+        .package(path: "../../swift-primitives/swift-parser-primitives")
     ],
     targets: [
         .target(
@@ -50,7 +51,8 @@ let package = Package(
                 .binary,
                 .time,
                 .rfc1123,
-                .incits_4_1986
+                .incits_4_1986,
+                .product(name: "Parser Primitives", package: "swift-parser-primitives")
             ]
         ),
         .target(
