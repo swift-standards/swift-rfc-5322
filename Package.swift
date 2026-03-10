@@ -17,9 +17,6 @@ extension Target.Dependency {
     static var incits_4_1986: Self {
         .product(name: "ASCII", package: "swift-ascii")
     }
-    static var testingExtras: Self {
-        .product(name: "Testing", package: "swift-testing")
-    }
 }
 
 let package = Package(
@@ -65,6 +62,7 @@ let package = Package(
             name: "RFC 5322 Foundation Tests",
             dependencies: [
                 "RFC 5322",
+                "RFC 5322 Foundation",
             ]
         ),
         .testTarget(
